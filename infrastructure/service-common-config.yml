@@ -1,6 +1,10 @@
 # Configuration partagée par les microservices (hors identity) : broker Axon (Kafka) et
 # client OAuth2 `server-client` (client_credentials) requis par le ResourceServerAutoConfiguration
 # du SDK. Le secret du client est fourni par chaque SealedSecret de service.
+#
+# Le client OAuth2 est déclaré via SPRING_APPLICATION_JSON : un id de registration contenant un
+# tiret (`server-client`) ne peut pas être bindé depuis une variable d'environnement classique
+# (`..._REGISTRATION_SERVER_CLIENT_...` est interprété comme `server.client`).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,9 +17,5 @@ data:
   QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local:8080
   QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks
 
-  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_PROVIDER: quizup-identity
-  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_ID: server
-  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_AUTHORIZATION_GRANT_TYPE: client_credentials
-  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_SCOPE: openid
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_QUIZUP_IDENTITY_TOKEN_URI: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/token
-  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_QUIZUP_IDENTITY_JWK_SET_URI: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks
+  SPRING_APPLICATION_JSON: >-
+    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://identity.quizup-prod.svc.cluster.local:8080/oauth2/token","jwk-set-uri":"http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks"}}}}}}}

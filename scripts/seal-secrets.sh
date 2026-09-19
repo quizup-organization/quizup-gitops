@@ -10,7 +10,6 @@
 #   ./scripts/seal-secrets.sh all
 #   ./scripts/seal-secrets.sh identity
 #   ./scripts/seal-secrets.sh infra
-#   ./scripts/seal-secrets.sh ovh-credentials
 #   ./scripts/seal-secrets.sh ghcr-pull
 #
 set -euo pipefail
@@ -83,17 +82,9 @@ seal_ghcr() {
     --docker-email="${GHCR_EMAIL:-unused@quizup.local}"
 }
 
-seal_ovh() {
-  seal_generic cert-manager ovh-credentials infrastructure/ovh-credentials/sealed-secret.yml \
-    --from-literal=applicationKey="${OVH_APPLICATION_KEY:?OVH_APPLICATION_KEY manquant}" \
-    --from-literal=applicationSecret="${OVH_APPLICATION_SECRET:?OVH_APPLICATION_SECRET manquant}" \
-    --from-literal=applicationConsumerKey="${OVH_APPLICATION_CONSUMER_KEY:?OVH_APPLICATION_CONSUMER_KEY manquant}"
-}
-
 seal_all() {
   seal_infra
   seal_ghcr
-  seal_ovh
   seal_identity
   for svc in theme game social matchmaking profile leaderboard; do
     seal_service "${svc}"
@@ -107,10 +98,9 @@ case "${1:-all}" in
   gateway) seal_gateway ;;
   infra) seal_infra ;;
   ghcr-pull) seal_ghcr ;;
-  ovh-credentials) seal_ovh ;;
   theme|game|social|matchmaking|profile|leaderboard) seal_service "$1" ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|ovh-credentials|identity|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|identity|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
     exit 1
     ;;
 esac

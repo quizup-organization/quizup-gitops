@@ -1,22 +1,22 @@
 # quizup-gitops
 
-GitOps repository (ArgoCD app-of-apps) for the QuizUp Kubernetes cluster hosted on
-**2× Raspberry Pi 5 (arm64)**. This repository replaces the former `quizup-deploy`.
+GitOps repository (ArgoCD app-of-apps) for the QuizUp Kubernetes cluster hosted on **2× Raspberry Pi 5 (arm64)**. This
+repository replaces the former `quizup-deploy`.
 
 > Host provisioning (OS + k3s) lives in **`quizup-infrastructure`** (Ansible).
 > This repo only contains Kubernetes manifests applied by ArgoCD.
 
 ## Target
 
-| URL | Component |
-|---|---|
-| `app.quizup.cnadjim.fr` | frontend (`quizup-web`, nginx) |
-| `api.quizup.cnadjim.fr` | gateway (REST + WebSocket STOMP) |
-| `identity.quizup.cnadjim.fr` | identity (OIDC issuer / JWT) |
+| URL                          | Component                        |
+|------------------------------|----------------------------------|
+| `app.quizup.cnadjim.fr`      | frontend (`quizup-web`, nginx)   |
+| `api.quizup.cnadjim.fr`      | gateway (REST + WebSocket STOMP) |
+| `identity.quizup.cnadjim.fr` | identity (OIDC issuer / JWT)     |
 
 - Cluster: **k3s** (1 server + 1 agent), ingress **Traefik** (bundled), storage **local-path**.
 - Images: **`ghcr.io/quizup-organization/<service>`**, built for **linux/arm64** (private → `ghcr-pull` secret).
-- TLS: **Let's Encrypt DNS-01** via **`cert-manager-webhook-ovh`** + the OVH API.
+- TLS: **Let's Encrypt HTTP-01** via cert-manager (solver ingress **Traefik**).
 - Secrets: **sealed-secrets**.
 
 ## Layout
@@ -24,6 +24,7 @@ GitOps repository (ArgoCD app-of-apps) for the QuizUp Kubernetes cluster hosted 
 ```
 argocd/           # root app-of-apps + one Application per addon/app
 namespaces/       # namespaces created before anything else
+cert-manager/     # ClusterIssuer letsencrypt-prod (HTTP-01, solver Traefik)
 infrastructure/   # Postgres, Kafka (KRaft), shared service config, infra sealed-secret
 apps/<service>/   # Deployment + Service + ConfigMap + Ingress + sealed-secret + kustomization
 scripts/          # seal-secrets.sh (kubeseal helper)
@@ -32,29 +33,23 @@ scripts/          # seal-secrets.sh (kubeseal helper)
 
 ## Bootstrap
 
-1. `cert-manager` and `sealed-secrets` are installed by their ArgoCD Applications.
+1. `cert-manager`, `sealed-secrets` and the `letsencrypt-issuer` are installed by their
+   ArgoCD Applications (issuer at sync-wave `1`, after cert-manager).
 2. Fetch the sealed-secrets public cert, then generate every `apps/*/sealed-secret.yml`
    (and `infrastructure/sealed-secret.yml`) with `scripts/seal-secrets.sh`.
-3. Seal the OVH credentials into `cert-manager/ovh-credentials` (see below).
-4. Create the CNAME/credentials for the OVH webhook issuer.
-5. Point the root Application at this repo (done by `quizup-infrastructure`'s
+3. Point the root Application at this repo (done by `quizup-infrastructure`'s
    `argocd_bootstrap` role).
 
-## OVH DNS-01 (Let's Encrypt)
+## TLS (Let's Encrypt HTTP-01)
 
-`cert-manager-webhook-ovh` solves DNS-01 against the OVH API and creates the `ClusterIssuer`
-`letsencrypt-prod` from its Helm values (`argocd/applications/cert-manager-webhook-ovh.yml`).
+The `letsencrypt-issuer` Application applies a cluster-scoped `ClusterIssuer`
+`letsencrypt-prod` (`cert-manager/cluster-issuer.yml`) whose **HTTP-01** solver uses the
+**Traefik** ingress class. The public Ingress (`api.` / `identity.` / `app.`) reference it via
+`cert-manager.io/cluster-issuer: letsencrypt-prod`; cert-manager temporarily exposes the
+challenge through Traefik. No OVH API key and no DNS-01 webhook are required.
 
-1. Create an OVH API key with `GET/PUT/POST/DELETE /domain/zone/*`
-   (<https://api.ovh.com/createToken/>).
-2. Seal the credentials in the `cert-manager` namespace:
-
-   ```bash
-   ./scripts/seal-secrets.sh ovh-credentials
-   ```
-
-3. Ensure `ovh-credentials` (SealedSecret) is synced **before** the webhook chart is installed
-   (ArgoCD sync-wave `-1` on the Secret).
+Prerequisites: the DNS A records already point to the public IP (DDNS DynHost) and **port 80**
+is reachable from the Internet.
 
 ## Image updates (GitOps flow)
 

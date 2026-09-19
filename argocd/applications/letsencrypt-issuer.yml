@@ -1,10 +1,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ovh-credentials
+  name: letsencrypt-issuer
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    # Après l'installation de cert-manager (wave 0 : Application `cert-manager`).
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -12,7 +13,7 @@ spec:
   source:
     repoURL: https://github.com/quizup-organization/quizup-gitops.git
     targetRevision: main
-    path: infrastructure/ovh-credentials
+    path: cert-manager
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
@@ -20,5 +21,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

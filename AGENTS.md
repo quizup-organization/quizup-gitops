@@ -13,8 +13,8 @@ Déployer QuizUp sur le cluster k3s via ArgoCD :
 - **`infrastructure/`** : Postgres (multi-bases), **Kafka KRaft mono-broker**, config partagée
   des services, secret infra scellé.
 - **`apps/<service>/`** : Deployment, Service, ConfigMap, Ingress, SealedSecret, Kustomization.
-- **Addons via ArgoCD Applications Helm** : `cert-manager`, `cert-manager-webhook-ovh`,
-  `sealed-secrets`.
+- **Addons via ArgoCD Applications** : `cert-manager`, `sealed-secrets`, et
+  `letsencrypt-issuer` (ClusterIssuer HTTP-01, solver Traefik).
 
 Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-infrastructure`**.
 
@@ -24,7 +24,7 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 
 - Domaine : `app.` / `api.` / `identity.` + `quizup.cnadjim.fr`.
 - Images : `ghcr.io/quizup-organization/<service>`, **linux/arm64**, privées (`ghcr-pull`).
-- TLS : `cert-manager.io/cluster-issuer: letsencrypt-prod` (OVH DNS-01).
+- TLS : `cert-manager.io/cluster-issuer: letsencrypt-prod` (**HTTP-01** via Traefik).
 - Secrets : **jamais en clair** → `scripts/seal-secrets.sh` (kubeseal).
 - Toutes les apps sont dans le namespace `quizup-prod` ; addons dans `cert-manager` / `sealed-secrets`.
 - `newTag` des images géré uniquement par `.github/workflows/update-image.yml`.
@@ -33,17 +33,17 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 
 ## 3. Services déployés
 
-| Dossier | Image | Ingress |
-|---|---|---|
-| `apps/gateway` | `ghcr.io/quizup-organization/gateway` | `api.quizup.cnadjim.fr` |
-| `apps/identity` | `ghcr.io/quizup-organization/identity` | `identity.quizup.cnadjim.fr` |
-| `apps/theme` | `ghcr.io/quizup-organization/theme` | — |
-| `apps/game` | `ghcr.io/quizup-organization/game` | — |
-| `apps/social` | `ghcr.io/quizup-organization/social` | — |
-| `apps/matchmaking` | `ghcr.io/quizup-organization/matchmaking` | — |
-| `apps/profile` | `ghcr.io/quizup-organization/profile` | — |
-| `apps/leaderboard` | `ghcr.io/quizup-organization/leaderboard` | — |
-| `apps/quizup-web` | `ghcr.io/quizup-organization/quizup-web` | `app.quizup.cnadjim.fr` |
+| Dossier            | Image                                     | Ingress                      |
+|--------------------|-------------------------------------------|------------------------------|
+| `apps/gateway`     | `ghcr.io/quizup-organization/gateway`     | `api.quizup.cnadjim.fr`      |
+| `apps/identity`    | `ghcr.io/quizup-organization/identity`    | `identity.quizup.cnadjim.fr` |
+| `apps/theme`       | `ghcr.io/quizup-organization/theme`       | —                            |
+| `apps/game`        | `ghcr.io/quizup-organization/game`        | —                            |
+| `apps/social`      | `ghcr.io/quizup-organization/social`      | —                            |
+| `apps/matchmaking` | `ghcr.io/quizup-organization/matchmaking` | —                            |
+| `apps/profile`     | `ghcr.io/quizup-organization/profile`     | —                            |
+| `apps/leaderboard` | `ghcr.io/quizup-organization/leaderboard` | —                            |
+| `apps/quizup-web`  | `ghcr.io/quizup-organization/quizup-web`  | `app.quizup.cnadjim.fr`      |
 
 ---
 

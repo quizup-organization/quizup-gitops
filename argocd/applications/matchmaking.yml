@@ -3,6 +3,11 @@ kind: Application
 metadata:
   name: quizup-matchmaking
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: matchmaking=ghcr.io/quizup-organization/matchmaking
+    argocd-image-updater.argoproj.io/matchmaking.update-strategy: semver
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

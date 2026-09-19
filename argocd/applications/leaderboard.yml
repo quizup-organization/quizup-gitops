@@ -3,6 +3,11 @@ kind: Application
 metadata:
   name: quizup-leaderboard
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: leaderboard=ghcr.io/quizup-organization/leaderboard
+    argocd-image-updater.argoproj.io/leaderboard.update-strategy: semver
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

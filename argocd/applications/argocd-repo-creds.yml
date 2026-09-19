@@ -1,13 +1,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: quizup-web
+  name: argocd-repo-creds
   namespace: argocd
   annotations:
-    argocd-image-updater.argoproj.io/image-list: quizup-web=ghcr.io/quizup-organization/quizup-web
-    argocd-image-updater.argoproj.io/quizup-web.update-strategy: semver
-    argocd-image-updater.argoproj.io/write-back-method: git
-    argocd-image-updater.argoproj.io/git-branch: main
+    # Avant argocd-image-updater (wave 0) : lui fournit le credential git d'écriture.
+    argocd.argoproj.io/sync-wave: "-1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -15,13 +13,11 @@ spec:
   source:
     repoURL: https://github.com/quizup-organization/quizup-gitops.git
     targetRevision: main
-    path: apps/quizup-web
+    path: argocd/repo-creds
   destination:
     server: https://kubernetes.default.svc
-    namespace: quizup-prod
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

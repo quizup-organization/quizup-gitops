@@ -3,6 +3,11 @@ kind: Application
 metadata:
   name: quizup-theme
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: theme=ghcr.io/quizup-organization/theme
+    argocd-image-updater.argoproj.io/theme.update-strategy: semver
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

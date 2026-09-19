@@ -3,6 +3,11 @@ kind: Application
 metadata:
   name: quizup-profile
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: profile=ghcr.io/quizup-organization/profile
+    argocd-image-updater.argoproj.io/profile.update-strategy: semver
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

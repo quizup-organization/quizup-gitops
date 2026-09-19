@@ -3,6 +3,11 @@ kind: Application
 metadata:
   name: quizup-game
   namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: game=ghcr.io/quizup-organization/game
+    argocd-image-updater.argoproj.io/game.update-strategy: semver
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

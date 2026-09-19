@@ -57,7 +57,7 @@ spec:
             - name: KAFKA_INTER_BROKER_LISTENER_NAME
               value: INTERNAL
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: 1@kafka:9093
+              value: 1@localhost:9093
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "1"
             - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR

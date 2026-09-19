@@ -22,7 +22,7 @@ spec:
               api_url: https://ghcr.io
               prefix: ghcr.io
               ping: no
-              credentials: pullsecret:quizup-prod/ghcr-pull
+              credentials: pullsecret:argocd/ghcr-pull
               default: true
         rbac:
           enabled: true

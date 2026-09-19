@@ -1,7 +1,6 @@
 # quizup-gitops
 
-GitOps repository (ArgoCD app-of-apps) for the QuizUp Kubernetes cluster hosted on **2× Raspberry Pi 5 (arm64)**. This
-repository replaces the former `quizup-deploy`.
+GitOps repository (ArgoCD app-of-apps) for the QuizUp Kubernetes cluster hosted on Raspberry Pi 5 (arm64)**.
 
 > Host provisioning (OS + k3s) lives in **`quizup-infrastructure`** (Ansible).
 > This repo only contains Kubernetes manifests applied by ArgoCD.

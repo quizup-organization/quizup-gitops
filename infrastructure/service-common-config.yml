@@ -13,6 +13,9 @@ metadata:
 data:
   QUIZUP_KAFKA_HOST: kafka
   QUIZUP_KAFKA_PORT: "9092"
+  # Axon (extension axon-kafka) lit axon.kafka.bootstrap-servers (défaut localhost:9092),
+  # distinct de spring.kafka.bootstrap-servers utilisé par Spring Kafka.
+  AXON_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
   QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local:8080
   QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks

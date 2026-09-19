@@ -90,6 +90,7 @@ data:
   QUIZUP_DB_USERNAME: quizup
   QUIZUP_KAFKA_HOST: kafka
   QUIZUP_KAFKA_PORT: "9092"
+  AXON_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
   # OIDC : issuer public vu par le navigateur (doit matcher l'authority de la SPA).
   QUIZUP_IDENTITY_ISSUER: https://identity.quizup.cnadjim.fr
   QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local:8080

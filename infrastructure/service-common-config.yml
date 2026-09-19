@@ -17,8 +17,8 @@ data:
   # distinct de spring.kafka.bootstrap-servers utilisé par Spring Kafka.
   AXON_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
-  QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local:8080
-  QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks
+  QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local
+  QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local/oauth2/jwks
 
   SPRING_APPLICATION_JSON: >-
-    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://identity.quizup-prod.svc.cluster.local:8080/oauth2/token","jwk-set-uri":"http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks"}}}}}}}
+    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}

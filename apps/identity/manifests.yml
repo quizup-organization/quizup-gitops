@@ -93,8 +93,8 @@ data:
   AXON_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
   # OIDC : issuer public vu par le navigateur (doit matcher l'authority de la SPA).
   QUIZUP_IDENTITY_ISSUER: https://identity.quizup.cnadjim.fr
-  QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local:8080
-  QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks
+  QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local
+  QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local/oauth2/jwks
   QUIZUP_APP_LOGIN_URI: https://app.quizup.cnadjim.fr/login
   QUIZUP_APP_OAUTH2_SUCCESS_URI: https://app.quizup.cnadjim.fr/login?social=success
   QUIZUP_APP_OAUTH2_FAILURE_URI: https://app.quizup.cnadjim.fr/login?error

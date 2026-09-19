@@ -83,12 +83,12 @@ metadata:
   name: quizup-gateway-config
   namespace: quizup-prod
 data:
-  QUIZUP_GATEWAY_IDENTITY_URL: http://identity.quizup-prod.svc.cluster.local:8080
-  QUIZUP_GATEWAY_PROFILE_URL: http://profile.quizup-prod.svc.cluster.local:8080
-  QUIZUP_GATEWAY_GAME_URL: http://game.quizup-prod.svc.cluster.local:8080
-  QUIZUP_GATEWAY_THEME_URL: http://theme.quizup-prod.svc.cluster.local:8080
-  QUIZUP_GATEWAY_SOCIAL_URL: http://social.quizup-prod.svc.cluster.local:8080
-  QUIZUP_GATEWAY_MATCHMAKING_URL: http://matchmaking.quizup-prod.svc.cluster.local:8080
-  QUIZUP_GATEWAY_LEADERBOARD_URL: http://leaderboard.quizup-prod.svc.cluster.local:8080
+  QUIZUP_GATEWAY_IDENTITY_URL: http://identity.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_PROFILE_URL: http://profile.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_GAME_URL: http://game.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_THEME_URL: http://theme.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_SOCIAL_URL: http://social.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_MATCHMAKING_URL: http://matchmaking.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_LEADERBOARD_URL: http://leaderboard.quizup-prod.svc.cluster.local
   QUIZUP_LOG_LEVEL: INFO
   QUIZUP_GATEWAY_LOG_LEVEL: INFO

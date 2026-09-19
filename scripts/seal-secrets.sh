@@ -48,10 +48,12 @@ seal_service() {
   local upper
   upper="$(echo "${svc}" | tr '[:lower:]-' '[:upper:]_')"
   local var_db_pass="${upper}_DB_PASSWORD"
-  local db_pass="${!var_db_pass:-}"
+  # Un seul utilisateur Postgres `quizup` : tous les secrets DB doivent porter le MÊME
+  # mot de passe que POSTGRES_PASSWORD (surchargeables via <SVC>_DB_PASSWORD si besoin).
+  local db_pass="${!var_db_pass:-${INFRA_POSTGRES_PASSWORD:-}}"
 
   seal_generic quizup-prod "quizup-${svc}-secret" "apps/${svc}/sealed-secret.yml" \
-    --from-literal=QUIZUP_DB_PASSWORD="${db_pass:?${var_db_pass} manquant}" \
+    --from-literal=QUIZUP_DB_PASSWORD="${db_pass:?INFRA_POSTGRES_PASSWORD (ou ${var_db_pass}) manquant}" \
     "$(server_client_secret)"
 }
 
@@ -63,7 +65,7 @@ seal_gateway() {
 
 seal_identity() {
   seal_generic quizup-prod quizup-identity-secret apps/identity/sealed-secret.yml \
-    --from-literal=QUIZUP_DB_PASSWORD="${IDENTITY_DB_PASSWORD:?IDENTITY_DB_PASSWORD manquant}" \
+    --from-literal=QUIZUP_DB_PASSWORD="${IDENTITY_DB_PASSWORD:-${INFRA_POSTGRES_PASSWORD:?INFRA_POSTGRES_PASSWORD manquant}}" \
     --from-literal=QUIZUP_IDENTITY_SERVER_CLIENT_SECRET="${IDENTITY_SERVER_CLIENT_SECRET:?IDENTITY_SERVER_CLIENT_SECRET manquant}" \
     --from-literal=QUIZUP_IDENTITY_ADMIN_CLIENT_SECRET="${IDENTITY_ADMIN_CLIENT_SECRET:?IDENTITY_ADMIN_CLIENT_SECRET manquant}" \
     --from-literal=QUIZUP_IDENTITY_JWK="${IDENTITY_JWK:-}"

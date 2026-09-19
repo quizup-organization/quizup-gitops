@@ -28,7 +28,7 @@ cert-manager/     # ClusterIssuer letsencrypt-prod (HTTP-01, solver Traefik)
 infrastructure/   # Postgres, Kafka (KRaft), shared service config, infra sealed-secret
 apps/<service>/   # Deployment + Service + ConfigMap + Ingress + sealed-secret + kustomization
 scripts/          # seal-secrets.sh (kubeseal helper)
-.github/workflows # update-image (repository_dispatch) + validate
+.github/workflows # validate (kustomize + yamllint)
 ```
 
 ## Bootstrap
@@ -54,11 +54,14 @@ is reachable from the Internet.
 ## Image updates (GitOps flow)
 
 ```
-service repo push main → semantic-release → multi-arch (linux/arm64) image push to GHCR
-  → repository_dispatch (type: deploy, service=<name>, version=<tag>) → quizup-gitops
-  → .github/workflows/update-image.yml  → sed newTag in apps/<name>/kustomization.yml
+service repo push main → semantic-release → image linux/arm64 → GHCR
+  → ArgoCD Image Updater (git write-back du newTag dans apps/<name>/kustomization.yml)
   → ArgoCD auto-sync → rollout
 ```
+
+Le déploiement est assuré par **ArgoCD Image Updater** (CR `argocd/image-updater/` + annotations
+`argocd-image-updater.argoproj.io/*` sur les Applications) : plus de `repository_dispatch` ni de
+workflow `update-image.yml` côté service.
 
 `<name>` must match the `service-name` used by the release workflow (`identity`, `theme`, `game`,
 `social`, `matchmaking`, `profile`, `leaderboard`, `gateway`, `quizup-web`).

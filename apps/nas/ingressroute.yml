@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nas
+  namespace: quizup-prod
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`nas.cnadjim.fr`)
+      kind: Rule
+      services:
+        - name: nas
+          port: 443
+          serversTransport: nas-insecure
+  tls:
+    secretName: nas-cnadjim-fr-tls

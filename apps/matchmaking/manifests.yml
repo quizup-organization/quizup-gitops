@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matchmaking
+  namespace: quizup-prod
+  labels:
+    app: matchmaking
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matchmaking
+  template:
+    metadata:
+      labels:
+        app: matchmaking
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: matchmaking
+          image: ghcr.io/quizup-organization/matchmaking:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+          envFrom:
+            - configMapRef:
+                name: quizup-service-config
+            - configMapRef:
+                name: quizup-matchmaking-config
+            - secretRef:
+                name: quizup-matchmaking-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 40
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: matchmaking
+  namespace: quizup-prod
+  labels:
+    app: matchmaking
+spec:
+  selector:
+    app: matchmaking
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizup-matchmaking-config
+  namespace: quizup-prod
+data:
+  QUIZUP_DB_HOST: postgres
+  QUIZUP_DB_PORT: "5432"
+  QUIZUP_DB_NAME: quizup_matchmaking
+  QUIZUP_DB_USERNAME: quizup
+  QUIZUP_LOG_LEVEL: INFO

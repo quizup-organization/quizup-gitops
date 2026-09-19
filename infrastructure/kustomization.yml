@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: quizup-prod
+resources:
+  - configmap.yml
+  - service-common-config.yml
+  - postgres-init.yml
+  - postgres.yml
+  - kafka.yml
+  - sealed-secret.yml
+  - registry-secret.yml

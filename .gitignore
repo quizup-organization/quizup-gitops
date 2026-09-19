@@ -1,0 +1,8 @@
+*.local.yaml
+*.local.yml
+.env
+.env.*
+!.env.example
+sealed-secrets-cert.pem
+sealed-secrets-key*.yaml
+ovh-credentials.json

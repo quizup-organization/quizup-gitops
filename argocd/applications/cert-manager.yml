@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.16.3
+    helm:
+      releaseName: cert-manager
+      values: |
+        crds:
+          enabled: true
+        # - borne la concurrence des challenges (cf. doc cert-manager) ;
+        # - self-check DNS-01 via resolvers publics (pas de resolver autoritatif OVH dans le cluster).
+        extraArgs:
+          - --max-concurrent-challenges=2
+          - --dns01-recursive-nameservers-only
+          - "--dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53"
+        resources:
+          requests:
+            cpu: 20m
+            memory: 96Mi
+          limits:
+            memory: 320Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

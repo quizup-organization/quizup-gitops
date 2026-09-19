@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizup-postgres-init
+  namespace: quizup-prod
+data:
+  001-databases.sql: |
+    CREATE DATABASE quizup_identity OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_theme OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_game OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_social OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_matchmaking OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_profile OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_leaderboard OWNER quizup ENCODING 'UTF8';

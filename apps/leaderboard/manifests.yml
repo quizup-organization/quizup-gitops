@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leaderboard
+  namespace: quizup-prod
+  labels:
+    app: leaderboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leaderboard
+  template:
+    metadata:
+      labels:
+        app: leaderboard
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: leaderboard
+          image: ghcr.io/quizup-organization/leaderboard:1.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+          envFrom:
+            - configMapRef:
+                name: quizup-service-config
+            - configMapRef:
+                name: quizup-leaderboard-config
+            - secretRef:
+                name: quizup-leaderboard-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 40
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leaderboard
+  namespace: quizup-prod
+  labels:
+    app: leaderboard
+spec:
+  selector:
+    app: leaderboard
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizup-leaderboard-config
+  namespace: quizup-prod
+data:
+  QUIZUP_DB_HOST: postgres
+  QUIZUP_DB_PORT: "5432"
+  QUIZUP_DB_NAME: quizup_leaderboard
+  QUIZUP_DB_USERNAME: quizup
+  QUIZUP_LOG_LEVEL: INFO

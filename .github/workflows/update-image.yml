@@ -1,0 +1,40 @@
+name: Update Image Tag
+
+on:
+  repository_dispatch:
+    types: [deploy]
+
+jobs:
+  update-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.QUIZUP_GITHUB_TOKEN }}
+
+      - name: Update kustomization image tag
+        run: |
+          SERVICE="${{ github.event.client_payload.service }}"
+          VERSION="${{ github.event.client_payload.version }}"
+          IMAGE="${{ github.event.client_payload.image }}"
+
+          KUSTOMIZATION="apps/${SERVICE}/kustomization.yml"
+
+          if [ ! -f "${KUSTOMIZATION}" ]; then
+            echo "::error::Kustomization not found: ${KUSTOMIZATION}"
+            exit 1
+          fi
+
+          sed -i "s|newTag:.*|newTag: \"${VERSION}\"|" "${KUSTOMIZATION}"
+          echo "Updated ${KUSTOMIZATION} → ${IMAGE}:${VERSION}"
+
+      - name: Commit & Push
+        run: |
+          SERVICE="${{ github.event.client_payload.service }}"
+          VERSION="${{ github.event.client_payload.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore(${SERVICE}): update image tag to ${VERSION}"
+          git push

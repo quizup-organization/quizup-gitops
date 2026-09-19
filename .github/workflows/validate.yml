@@ -1,0 +1,32 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: v1.31.0
+
+      - name: Render every kustomization
+        run: |
+          set -euo pipefail
+          for dir in infrastructure apps/*; do
+            [ -f "${dir}/kustomization.yml" ] || continue
+            echo "::group::kustomize ${dir}"
+            kubectl kustomize "${dir}" > /dev/null
+            echo "ok: ${dir}"
+            echo "::endgroup::"
+          done
+
+      - name: yamllint
+        run: |
+          pipx install yamllint || pip install yamllint
+          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: {check-keys: false}}}" .

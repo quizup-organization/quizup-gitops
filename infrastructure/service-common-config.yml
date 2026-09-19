@@ -1,0 +1,21 @@
+# Configuration partagée par les microservices (hors identity) : broker Axon (Kafka) et
+# client OAuth2 `server-client` (client_credentials) requis par le ResourceServerAutoConfiguration
+# du SDK. Le secret du client est fourni par chaque SealedSecret de service.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizup-service-config
+  namespace: quizup-prod
+data:
+  QUIZUP_KAFKA_HOST: kafka
+  QUIZUP_KAFKA_PORT: "9092"
+
+  QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local:8080
+  QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks
+
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_PROVIDER: quizup-identity
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_ID: server
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_AUTHORIZATION_GRANT_TYPE: client_credentials
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_SCOPE: openid
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_QUIZUP_IDENTITY_TOKEN_URI: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/token
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_QUIZUP_IDENTITY_JWK_SET_URI: http://identity.quizup-prod.svc.cluster.local:8080/oauth2/jwks

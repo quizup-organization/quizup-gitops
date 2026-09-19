@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quizup-web
+  namespace: quizup-prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - app.quizup.cnadjim.fr
+      secretName: app-quizup-cnadjim-fr-tls
+  rules:
+    - host: app.quizup.cnadjim.fr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quizup-web
+                port:
+                  number: 80

@@ -7,4 +7,4 @@ resources:
   - sealed-secret.yml
 images:
   - name: ghcr.io/quizup-organization/identity
-    newTag: "1.0.0"
+    newTag: "1.0.1"

@@ -109,4 +109,7 @@ data:
   SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
   # Désactive temporairement l'auto-config Axon Activity (régression 1.4.0).
   SPRING_AUTOCONFIGURE_EXCLUDE: io.github.quizup.axon.autoconfigure.AxonDistributedActivityMetricsAutoConfiguration
+  # Swagger : URL publique via le gateway + masque les endpoints internes Axon.
+  MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/identity-service
+  SPRINGDOC_PATHS_TO_EXCLUDE: /command-capabilities,/query-capabilities,/command-transport,/spring-command-bus-connector/**,/spring-query-bus-connector/**
   QUIZUP_LOG_LEVEL: INFO

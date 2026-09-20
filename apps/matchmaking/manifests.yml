@@ -88,5 +88,7 @@ data:
   QUIZUP_DB_HOST: postgres
   QUIZUP_DB_PORT: "5432"
   QUIZUP_DB_NAME: quizup_matchmaking
+  # URL publique du serveur OpenAPI (acces via le gateway).
+  MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/matchmaking-service
   QUIZUP_DB_USERNAME: quizup
   QUIZUP_LOG_LEVEL: INFO

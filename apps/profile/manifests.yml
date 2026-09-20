@@ -88,6 +88,8 @@ data:
   QUIZUP_DB_HOST: postgres
   QUIZUP_DB_PORT: "5432"
   QUIZUP_DB_NAME: quizup_profile
+  # URL publique du serveur OpenAPI (acces via le gateway).
+  MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/profile-service
   QUIZUP_DB_USERNAME: quizup
   QUIZUP_SEED_DATA_ENABLED: "false"
   QUIZUP_LOG_LEVEL: INFO

@@ -75,12 +75,17 @@ seal_gateway() {
     "$(server_client_secret)"
 }
 
+# Secret principal d'identity. Le client OAuth2 Google (login social) est REQUIS :
+# sans `QUIZUP_OAUTH2_GOOGLE_SECRET`, le client-secret reste le placeholder littéral
+# `${QUIZUP_OAUTH2_GOOGLE_SECRET}` et Google refuse l'échange de token.
 seal_identity() {
   seal_generic quizup-prod quizup-identity-secret apps/identity/sealed-secret.yml \
     --from-literal=QUIZUP_DB_PASSWORD="${IDENTITY_DB_PASSWORD:-${INFRA_POSTGRES_PASSWORD:?INFRA_POSTGRES_PASSWORD manquant}}" \
     --from-literal=QUIZUP_IDENTITY_SERVER_CLIENT_SECRET="${IDENTITY_SERVER_CLIENT_SECRET:?IDENTITY_SERVER_CLIENT_SECRET manquant}" \
     --from-literal=QUIZUP_IDENTITY_ADMIN_CLIENT_SECRET="${IDENTITY_ADMIN_CLIENT_SECRET:?IDENTITY_ADMIN_CLIENT_SECRET manquant}" \
-    --from-literal=QUIZUP_IDENTITY_JWK="${IDENTITY_JWK:-}"
+    --from-literal=QUIZUP_IDENTITY_JWK="${IDENTITY_JWK:-}" \
+    --from-literal=QUIZUP_OAUTH2_GOOGLE_CLIENT_ID="${QUIZUP_OAUTH2_GOOGLE_CLIENT_ID:-270229696016-9u3916ckfcludqv77uiebgir65j3eurk.apps.googleusercontent.com}" \
+    --from-literal=QUIZUP_OAUTH2_GOOGLE_SECRET="${QUIZUP_OAUTH2_GOOGLE_SECRET:?QUIZUP_OAUTH2_GOOGLE_SECRET manquant}"
 }
 
 # Secret additionnel d'identity : client OIDC `grafana` (confidentiel).

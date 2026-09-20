@@ -17,6 +17,10 @@ spec:
     helm:
       releaseName: otel-collector
       values: |
+        # Nom court du Service : l'endpoint OTLP par défaut du SDK est
+        # `otel-collector.monitoring.svc.cluster.local`.
+        fullnameOverride: otel-collector
+
         mode: deployment
         replicaCount: 1
 

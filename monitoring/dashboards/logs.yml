@@ -56,70 +56,86 @@ data:
         {
           "id": 1,
           "type": "logs",
-          "title": "Logs (tous services)",
-          "description": "Services Java : JSON ECS reformate en « NIVEAU [service] message ». Sources texte (postgres/kafka/nginx/...) : ligne brute. Le filtre Niveau ne s'applique qu'aux services JSON.",
+          "title": "Logs services Java (JSON ECS)",
+          "description": "JSON ECS reformate en « NIVEAU [service] message ». Détail + trace_id au clic.",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 18, "w": 24, "x": 0, "y": 0 },
+          "gridPos": { "h": 15, "w": 12, "x": 0, "y": 0 },
           "options": { "showTime": true, "wrapLogMessage": true, "prettifyJson": false, "enableLogDetails": true, "sortOrder": "Descending", "dedupStrategy": "none" },
           "targets": [
             {
               "refId": "A",
-              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} | json | log_level=~\"$level\" | line_format \"{{ if .message }}{{ .log_level }} [{{ .app }}] {{ .message }}{{ else }}{{ __line__ }}{{ end }}\"",
+              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" | log_level=~\"$level\" | line_format \"{{ .log_level }} [{{ .app }}] {{ .message }}\"",
               "maxLines": 500
             }
           ]
         },
         {
           "id": 2,
-          "type": "timeseries",
-          "title": "Volume par niveau (services JSON)",
+          "type": "logs",
+          "title": "Logs sources texte (nginx, postgres, kafka, ...)",
+          "description": "Ligne brute. Filtrer avec |= \"...\" (ex. |= \"ERROR\").",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 18 },
-          "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "gridPos": { "h": 15, "w": 12, "x": 12, "y": 0 },
+          "options": { "showTime": true, "wrapLogMessage": true, "prettifyJson": false, "enableLogDetails": true, "sortOrder": "Descending", "dedupStrategy": "none" },
           "targets": [
-            { "refId": "A", "expr": "sum by (log_level) (count_over_time({namespace=\"quizup-prod\"} | json | log_level=~\"$level\" [5m]))", "legendFormat": "{{log_level}}" }
+            {
+              "refId": "A",
+              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__!=\"\" | line_format \"{{ __line__ }}\"",
+              "maxLines": 500
+            }
           ]
         },
         {
           "id": 3,
           "type": "timeseries",
-          "title": "Erreurs par service (JSON)",
+          "title": "Volume par niveau (services JSON)",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 18 },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 15 },
           "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\"} | json | log_level=~\"ERROR|FATAL\" [5m]))", "legendFormat": "{{app}}" }
+            { "refId": "A", "expr": "sum by (log_level) (count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=~\"$level\" [5m]))", "legendFormat": "{{log_level}}" }
           ]
         },
         {
           "id": 4,
           "type": "timeseries",
-          "title": "Taux d'erreur par service (JSON)",
+          "title": "Erreurs par service (JSON)",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 18 },
-          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 15 },
+          "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\"} | json | log_level=~\"ERROR|FATAL\" [5m])) / clamp_min(sum by (app) (count_over_time({namespace=\"quizup-prod\"} | json [5m])), 0.0001)", "legendFormat": "{{app}}" }
+            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [5m]))", "legendFormat": "{{app}}" }
           ]
         },
         {
           "id": 5,
-          "type": "table",
-          "title": "Top erreurs (logger)",
+          "type": "timeseries",
+          "title": "Taux d'erreur par service (JSON)",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
-          "fieldConfig": { "defaults": { "custom": { "align": "auto" }, "unit": "short" }, "overrides": [ { "matcher": { "id": "byName", "options": "log_logger" }, "properties": [ { "id": "custom.width", "value": 460 } ] } ] },
-          "options": { "showHeader": true, "sortBy": [ { "displayName": "Value", "desc": true } ] },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 15 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "topk(10, sum by (log_logger) (count_over_time({namespace=\"quizup-prod\"} | json | log_level=~\"ERROR|FATAL\" [1h])))", "instant": true }
+            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [5m])) / clamp_min(sum by (app) (count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" [5m])), 0.0001)", "legendFormat": "{{app}}" }
           ]
         },
         {
           "id": 6,
+          "type": "table",
+          "title": "Top erreurs (logger)",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+          "fieldConfig": { "defaults": { "custom": { "align": "auto" }, "unit": "short" }, "overrides": [ { "matcher": { "id": "byName", "options": "log_logger" }, "properties": [ { "id": "custom.width", "value": 460 } ] } ] },
+          "options": { "showHeader": true, "sortBy": [ { "displayName": "Value", "desc": true } ] },
+          "targets": [
+            { "refId": "A", "expr": "topk(10, sum by (log_logger) (count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [1h])))", "instant": true }
+          ]
+        },
+        {
+          "id": 7,
           "type": "timeseries",
           "title": "Web (nginx) — requêtes /s par code HTTP",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
           "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             { "refId": "A", "expr": "sum by (status) (rate({namespace=\"quizup-prod\", app=\"quizup-web\"} | regexp ` (?P<status>[0-9]{3}) [0-9-]+ ` [5m]))", "legendFormat": "{{status}}" }

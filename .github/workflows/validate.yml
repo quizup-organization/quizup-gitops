@@ -29,4 +29,4 @@ jobs:
       - name: yamllint
         run: |
           pipx install yamllint || pip install yamllint
-          yamllint -d "{extends: default, rules: {line-length: disable, document-start: disable, truthy: {check-keys: false}}}" .
+          yamllint .

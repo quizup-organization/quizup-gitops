@@ -32,6 +32,8 @@ spec:
                 name: quizup-identity-secret
             - secretRef:
                 name: quizup-identity-grafana
+            - secretRef:
+                name: quizup-identity-mail
           resources:
             requests:
               cpu: 150m
@@ -111,3 +113,11 @@ data:
   MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/identity-service
   SPRINGDOC_PATHS_TO_EXCLUDE: /command-capabilities,/query-capabilities,/command-transport,/spring-command-bus-connector/**,/spring-query-bus-connector/**
   QUIZUP_LOG_LEVEL: INFO
+  # Seeding : crée le compte système unique (admin + bot), sans credential.
+  QUIZUP_SEED_DATA_ENABLED: "true"
+  # Liste blanche d'emails obtenant ROLE_ADMIN (Grafana).
+  QUIZUP_ADMIN_EMAILS: c.nadjim@gmail.com
+  # Emails transactionnels (codes de connexion OTP) via Resend.
+  # La clé API est portée par le secret quizup-identity-mail.
+  QUIZUP_MAIL_FROM: QuizUp <no-reply@quizup.cnadjim.fr>
+  QUIZUP_MAIL_BASE_URL: https://api.resend.com

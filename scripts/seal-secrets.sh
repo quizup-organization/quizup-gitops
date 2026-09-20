@@ -88,6 +88,13 @@ seal_identity() {
     --from-literal=QUIZUP_OAUTH2_GOOGLE_SECRET="${QUIZUP_OAUTH2_GOOGLE_SECRET:?QUIZUP_OAUTH2_GOOGLE_SECRET manquant}"
 }
 
+# Secret additionnel d'identity : clé API Resend pour les codes de connexion OTP email.
+# Séparé du secret principal pour ne pas avoir à le resceller en entier.
+seal_identity_mail() {
+  seal_generic quizup-prod quizup-identity-mail apps/identity/mail-sealed-secret.yml \
+    --from-literal=QUIZUP_MAIL_API_KEY="${QUIZUP_MAIL_API_KEY:?QUIZUP_MAIL_API_KEY manquant}"
+}
+
 # Secret additionnel d'identity : client OIDC `grafana` (confidentiel).
 # Séparé du secret principal pour ne pas avoir à le resceller en entier.
 seal_identity_grafana() {
@@ -137,6 +144,7 @@ seal_all() {
 case "${1:-all}" in
   all) seal_all ;;
   identity) seal_identity ;;
+  identity-mail) seal_identity_mail ;;
   identity-grafana) seal_identity_grafana ;;
   gateway) seal_gateway ;;
   infra) seal_infra ;;
@@ -144,7 +152,7 @@ case "${1:-all}" in
   monitoring) seal_monitoring ;;
   theme|game|social|matchmaking|profile|leaderboard) seal_service "$1" ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
     exit 1
     ;;
 esac

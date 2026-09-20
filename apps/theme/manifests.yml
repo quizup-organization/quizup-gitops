@@ -91,5 +91,5 @@ data:
   # URL publique du serveur OpenAPI (acces via le gateway).
   MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/theme-service
   QUIZUP_DB_USERNAME: quizup
-  QUIZUP_SEED_DATA_ENABLED: "false"
+  QUIZUP_SEED_DATA_ENABLED: "true"
   QUIZUP_LOG_LEVEL: INFO

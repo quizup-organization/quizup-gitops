@@ -87,6 +87,14 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   (RBAC restreint à ce namespace) ; `write-back-method: git`, `git-branch: main`.
 - **`leaderboard`** nécessite son `application-prod.yml` (datasource/kafka/jwt) comme les autres.
 - **Frontend** : les variables Vite sont **inlinées au build** (voir `web/.github/workflows/release.yml`).
+- **Emails OTP** : les codes de connexion sont envoyés via **Resend**. `QUIZUP_MAIL_API_KEY` est
+  portée par le secret `quizup-identity-secret` (resceller avec `QUIZUP_MAIL_API_KEY=… ./scripts/seal-secrets.sh identity`).
+  `QUIZUP_MAIL_FROM` / `QUIZUP_MAIL_BASE_URL` sont dans le ConfigMap identity.
+- **Rôles admin** : `QUIZUP_ADMIN_EMAILS` (ConfigMap identity) est une liste d'emails séparés par
+  des virgules obtenant `ROLE_ADMIN` (mappé Admin côté Grafana). Le **compte système unique**
+  (`quizup.contacts@gmail.com`) est aussi admin et sert de bot.
+- **Seeding** : `QUIZUP_SEED_DATA_ENABLED=true` pour `identity` (compte système), `profile`
+  (profil système) et `theme` (4 sujets de départ). Seeders idempotents.
 
 ---
 
@@ -132,3 +140,44 @@ Les datasources Loki/Tempo et leurs corrélations sont dans `monitoring/grafana-
 **Générer les secrets** : `SEALED_SECRETS_CERT=./sealed-secrets-cert.pem ./scripts/seal-secrets.sh monitoring`
 (variables : `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_OIDC_CLIENT_SECRET`, `TELEGRAM_BOT_TOKEN`) et
 `... ./scripts/seal-secrets.sh identity-grafana` (`GRAFANA_OIDC_CLIENT_SECRET`).
+
+---
+
+## 7. Reset « base saine » (production)
+
+Le reset complet efface **Postgres + Kafka** (les anciens événements Kafka seraient sinon rejoués
+dans les projections neuves). À faire après avoir déployé le lot auth passwordless.
+
+```bash
+# 0. Désactiver temporairement l'auto-sync ArgoCD des Applications concernées
+kubectl -n argocd patch app quizup-root --type merge -p '{"spec":{"syncPolicy":null}}'
+for app in quizup-infrastructure quizup-identity quizup-theme quizup-profile \
+           quizup-game quizup-social quizup-matchmaking quizup-leaderboard quizup-gateway; do
+  kubectl -n argocd patch app "$app" --type merge -p '{"spec":{"syncPolicy":null}}'
+done
+
+# 1. Arrêter les apps
+kubectl -n quizup-prod scale deploy --all --replicas=0
+
+# 2. Supprimer les données Postgres + Kafka (PVC local-path)
+kubectl -n quizup-prod delete statefulset postgres kafka
+kubectl -n quizup-prod delete pvc postgres-data-postgres-0 kafka-data-kafka-0
+
+# 3. Re-synchroniser (recrée Postgres -> init des 7 bases ; Kafka vierge ; Flyway + seeders)
+argocd app sync quizup-infrastructure
+for app in quizup-identity quizup-theme quizup-profile quizup-game quizup-social \
+           quizup-matchmaking quizup-leaderboard quizup-gateway; do
+  argocd app sync "$app"
+done
+
+# 4. Réactiver l'auto-sync
+for app in quizup-root quizup-infrastructure quizup-identity quizup-theme quizup-profile \
+           quizup-game quizup-social quizup-matchmaking quizup-leaderboard quizup-gateway; do
+  kubectl -n argocd patch app "$app" --type merge \
+    -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
+done
+```
+
+**Vérifications** : `user_entry` contient le compte système (`password` absent), `profile` a son
+profil, `theme` a 4 sujets publiés, et `c.nadjim@gmail.com` obtient **Admin** dans Grafana.
+Les sessions en base étant purgées, tout le monde doit se reconnecter.

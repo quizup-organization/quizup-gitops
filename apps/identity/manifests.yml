@@ -125,6 +125,13 @@ data:
   # Découverte Kubernetes native (prod). Désactivée par défaut dans le SDK.
   SPRING_CLOUD_KUBERNETES_ENABLED: "true"
   SPRING_CLOUD_KUBERNETES_DISCOVERY_ENABLED: "true"
+  # Client OAuth2 sortant `server-client` (client_credentials) : requis par le RestTemplate
+  # tokenisé du SDK pour interroger les `/command-capabilities` des pairs (bus Axon distribué).
+  # Identity n'inclut pas `quizup-service-config` ; on redéclare donc la registration ici
+  # avec SON secret (QUIZUP_IDENTITY_SERVER_CLIENT_SECRET) et les URLs in-cluster.
+  SPRING_APPLICATION_JSON: >-
+    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${QUIZUP_IDENTITY_SERVER_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}
+    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${QUIZUP_IDENTITY_SERVER_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}
   # Seeding : crée le compte système unique (admin + bot), sans credential.
   QUIZUP_SEED_DATA_ENABLED: "true"
   # Liste blanche d'emails obtenant ROLE_ADMIN (Grafana).

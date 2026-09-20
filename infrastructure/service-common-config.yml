@@ -28,5 +28,13 @@ data:
   # alors que QUIZUP_AUTH_SERVER_URL reste in-cluster (JWKS côté serveur).
   MICROSERVICE_SWAGGER_OAUTH2_AUTHORIZATION_SERVER_URL: https://identity.quizup.cnadjim.fr
 
+  # Pool JDBC réduit : 7 bases partagent un Postgres à max_connections=150.
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
+
+  # Désactive temporairement l'auto-config Axon Activity (régression 1.4.0 : initialisation
+  # trop précoce des event processors). À retirer après le correctif SDK.
+  SPRING_AUTOCONFIGURE_EXCLUDE: io.github.quizup.axon.autoconfigure.AxonDistributedActivityMetricsAutoConfiguration
+
   SPRING_APPLICATION_JSON: >-
     {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}

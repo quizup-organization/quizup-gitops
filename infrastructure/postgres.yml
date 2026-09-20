@@ -38,6 +38,10 @@ spec:
         - name: postgres
           image: postgres:16-alpine
           imagePullPolicy: IfNotPresent
+          # max_connections=150 : 7 bases applicatives x pool Hikari (5) + marge.
+          args:
+            - -c
+            - max_connections=150
           envFrom:
             - configMapRef:
                 name: quizup-infra-config

@@ -104,4 +104,9 @@ data:
   QUIZUP_SESSION_COOKIE_SECURE: "true"
   # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
   MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
+  # Pool JDBC réduit (Postgres max_connections=150 partagé par 7 bases).
+  SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
+  SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
+  # Désactive temporairement l'auto-config Axon Activity (régression 1.4.0).
+  SPRING_AUTOCONFIGURE_EXCLUDE: io.github.quizup.axon.autoconfigure.AxonDistributedActivityMetricsAutoConfiguration
   QUIZUP_LOG_LEVEL: INFO

@@ -5,17 +5,20 @@ metadata:
   namespace: quizup-prod
   labels:
     app.kubernetes.io/part-of: quizup
+    app.kubernetes.io/component: axon
     app: quizup-game
 spec:
   replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/part-of: quizup
+      app.kubernetes.io/component: axon
       app: quizup-game
   template:
     metadata:
       labels:
         app.kubernetes.io/part-of: quizup
+        app.kubernetes.io/component: axon
         app: quizup-game
     spec:
       imagePullSecrets:
@@ -73,10 +76,12 @@ metadata:
   namespace: quizup-prod
   labels:
     app.kubernetes.io/part-of: quizup
+    app.kubernetes.io/component: axon
     app: quizup-game
 spec:
   selector:
     app.kubernetes.io/part-of: quizup
+    app.kubernetes.io/component: axon
     app: quizup-game
   ports:
     - name: http

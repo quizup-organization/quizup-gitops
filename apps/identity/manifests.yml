@@ -5,6 +5,7 @@ metadata:
   namespace: quizup-prod
   labels:
     app.kubernetes.io/part-of: quizup
+    app.kubernetes.io/component: axon
     app: quizup-identity
 spec:
   # 1 réplique : le scaling nécessite un `QUIZUP_IDENTITY_JWK` partagé (clés de signature JWT identiques).
@@ -12,11 +13,13 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/part-of: quizup
+      app.kubernetes.io/component: axon
       app: quizup-identity
   template:
     metadata:
       labels:
         app.kubernetes.io/part-of: quizup
+        app.kubernetes.io/component: axon
         app: quizup-identity
     spec:
       imagePullSecrets:
@@ -76,10 +79,12 @@ metadata:
   namespace: quizup-prod
   labels:
     app.kubernetes.io/part-of: quizup
+    app.kubernetes.io/component: axon
     app: quizup-identity
 spec:
   selector:
     app.kubernetes.io/part-of: quizup
+    app.kubernetes.io/component: axon
     app: quizup-identity
   ports:
     - name: http

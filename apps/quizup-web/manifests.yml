@@ -10,7 +10,6 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: quizup
       app: quizup-web
   template:
     metadata:
@@ -56,7 +55,6 @@ metadata:
     app: quizup-web
 spec:
   selector:
-    app.kubernetes.io/part-of: quizup
     app: quizup-web
   ports:
     - name: http

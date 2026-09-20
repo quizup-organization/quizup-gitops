@@ -6,6 +6,7 @@ resources:
   - service-monitors.yml
   - probes.yml
   - prometheus-rules.yml
+  - business-rules.yml
   - alertmanager-config.yml
   - kafka-exporter.yml
   - postgres-exporter.yml
@@ -14,4 +15,5 @@ resources:
   - dashboards/logs.yml
   - dashboards/slo.yml
   - dashboards/kpi.yml
+  - dashboards/kpi-services.yml
   - grafana-datasources.yml

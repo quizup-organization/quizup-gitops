@@ -16,4 +16,5 @@ resources:
   - dashboards/slo.yml
   - dashboards/kpi.yml
   - dashboards/kpi-services.yml
+  - dashboards/axon-activity.yml
   - grafana-datasources.yml

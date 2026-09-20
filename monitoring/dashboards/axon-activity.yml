@@ -1,0 +1,177 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-quizup-axon-activity
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: quizup
+data:
+  quizup-axon-activity.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["quizup", "axon"],
+      "title": "QuizUp — Axon Activity",
+      "uid": "quizup-axon-activity",
+      "version": 1,
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "application",
+            "label": "Application",
+            "type": "query",
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
+            "query": "label_values(quizup_axon_commands_total, application)",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "refresh": 2,
+            "sort": 1
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Commandes /s (succès, par commande)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "topk(8, sum by (name) (rate(quizup_axon_commands_total{application=~\"$application\", result=\"success\"}[5m])))", "legendFormat": "{{name}}" }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Commandes — taux d'échec",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (application) (rate(quizup_axon_commands_total{application=~\"$application\", result=\"failure\"}[5m])) / clamp_min(sum by (application) (rate(quizup_axon_commands_total{application=~\"$application\"}[5m])), 0.0001)", "legendFormat": "{{application}}" }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Latence commandes p95",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, application) (rate(quizup_axon_command_duration_seconds_bucket{application=~\"$application\"}[5m])))", "legendFormat": "{{application}}" }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Événements publiés /s (top 10 types)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "topk(10, sum by (name) (rate(quizup_axon_events_published_total{application=~\"$application\"}[5m])))", "legendFormat": "{{name}}" }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Événements traités /s (par event processor)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "topk(12, sum by (processor) (rate(quizup_axon_events_processed_total{application=~\"$application\"}[5m])))", "legendFormat": "{{processor}}" }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Traitement d'événements — taux d'échec",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (processor) (rate(quizup_axon_events_processed_total{application=~\"$application\", result=\"failure\"}[5m])) / clamp_min(sum by (processor) (rate(quizup_axon_events_processed_total{application=~\"$application\"}[5m])), 0.0001)", "legendFormat": "{{processor}}" }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Latence de traitement p95 (par processor)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, processor) (rate(quizup_axon_event_duration_seconds_bucket{application=~\"$application\"}[5m])))", "legendFormat": "{{processor}}" }
+          ]
+        },
+        {
+          "id": 12,
+          "type": "timeseries",
+          "title": "Débit topic Axon.Events (offsets/s)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (topic) (rate(kafka_topic_partition_current_offset{topic=~\"Axon.*\"}[5m]))", "legendFormat": "{{topic}}" }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "Requêtes /s (succès / échec)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (application) (rate(queryBus_successCounter_total{application=~\"$application\"}[5m]))", "legendFormat": "{{application}} succès" },
+            { "refId": "B", "expr": "sum by (application) (rate(queryBus_failureCounter_total{application=~\"$application\"}[5m]))", "legendFormat": "{{application}} échec" }
+          ]
+        },
+        {
+          "id": 11,
+          "type": "timeseries",
+          "title": "Latence requêtes p95",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, application) (rate(queryBus_allTimer_seconds_bucket{application=~\"$application\"}[5m])))", "legendFormat": "{{application}}" }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "table",
+          "title": "Event processors — état",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 9, "w": 12, "x": 0, "y": 40 },
+          "fieldConfig": { "defaults": { "custom": { "align": "auto" } }, "overrides": [] },
+          "options": { "showHeader": true },
+          "targets": [
+            { "refId": "A", "expr": "quizup_axon_event_processor_running{application=~\"$application\"}", "instant": true, "format": "table" },
+            { "refId": "B", "expr": "quizup_axon_event_processor_error{application=~\"$application\"}", "instant": true, "format": "table" }
+          ]
+        },
+        {
+          "id": 9,
+          "type": "stat",
+          "title": "Event processors en erreur",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 9, "w": 12, "x": 12, "y": 40 },
+          "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum(quizup_axon_event_processor_error{application=~\"$application\"})" }
+          ]
+        }
+      ]
+    }

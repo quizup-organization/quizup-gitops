@@ -24,5 +24,9 @@ data:
   # L'endpoint OTLP par défaut du SDK pointe vers otel-collector.monitoring.
   MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
 
+  # Swagger UI : l'URL d'autorisation OAuth2 doit être PUBLIQUE (le navigateur y accède),
+  # alors que QUIZUP_AUTH_SERVER_URL reste in-cluster (JWKS côté serveur).
+  MICROSERVICE_SWAGGER_OAUTH2_AUTHORIZATION_SERVER_URL: https://identity.quizup.cnadjim.fr
+
   SPRING_APPLICATION_JSON: >-
     {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}

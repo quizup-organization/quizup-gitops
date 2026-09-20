@@ -36,22 +36,27 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 - Déploiement des images : **ArgoCD Image Updater** (git write-back du `newTag`), via le CR
   `argocd/image-updater/` et les annotations `argocd-image-updater.argoproj.io/*` sur les
   Applications. Plus de `repository_dispatch` / `update-image.yml`.
+- **Nommage (une seule convention)** : `spring.application.name` = nom du Deployment = nom du
+  Service = valeur du label `app` = **`quizup-<service>`** (ex. `quizup-theme`). Les Services
+  applicatifs portent aussi `app.kubernetes.io/part-of: quizup` (monitoring) et, pour les services
+  Axon, `app.kubernetes.io/component: axon` (découverte). L'infra `postgres`/`kafka` fait exception
+  (contrainte PVC des StatefulSets).
 
 ---
 
 ## 3. Services déployés
 
-| Dossier            | Image                                     | Ingress                      |
-|--------------------|-------------------------------------------|------------------------------|
-| `apps/gateway`     | `ghcr.io/quizup-organization/gateway`     | `api.quizup.cnadjim.fr`      |
-| `apps/identity`    | `ghcr.io/quizup-organization/identity`    | `identity.quizup.cnadjim.fr` |
-| `apps/theme`       | `ghcr.io/quizup-organization/theme`       | —                            |
-| `apps/game`        | `ghcr.io/quizup-organization/game`        | —                            |
-| `apps/social`      | `ghcr.io/quizup-organization/social`      | —                            |
-| `apps/matchmaking` | `ghcr.io/quizup-organization/matchmaking` | —                            |
-| `apps/profile`     | `ghcr.io/quizup-organization/profile`     | —                            |
-| `apps/leaderboard` | `ghcr.io/quizup-organization/leaderboard` | —                            |
-| `apps/quizup-web`  | `ghcr.io/quizup-organization/quizup-web`  | `app.quizup.cnadjim.fr`      |
+| Dossier            | Nom k8s (`app`)     | Image                                     | Ingress                      |
+|--------------------|---------------------|-------------------------------------------|------------------------------|
+| `apps/gateway`     | `quizup-gateway`    | `ghcr.io/quizup-organization/gateway`     | `api.quizup.cnadjim.fr`      |
+| `apps/identity`    | `quizup-identity`   | `ghcr.io/quizup-organization/identity`    | `identity.quizup.cnadjim.fr` |
+| `apps/theme`       | `quizup-theme`      | `ghcr.io/quizup-organization/theme`       | —                            |
+| `apps/game`        | `quizup-game`       | `ghcr.io/quizup-organization/game`        | —                            |
+| `apps/social`      | `quizup-social`     | `ghcr.io/quizup-organization/social`      | —                            |
+| `apps/matchmaking` | `quizup-matchmaking`| `ghcr.io/quizup-organization/matchmaking` | —                            |
+| `apps/profile`     | `quizup-profile`    | `ghcr.io/quizup-organization/profile`     | —                            |
+| `apps/leaderboard` | `quizup-leaderboard`| `ghcr.io/quizup-organization/leaderboard` | —                            |
+| `apps/quizup-web`  | `quizup-web`        | `ghcr.io/quizup-organization/quizup-web`  | `app.quizup.cnadjim.fr`      |
 
 ---
 
@@ -68,8 +73,14 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 ## 5. Dépannage (retours d'expérience)
 
 - **Port in-cluster** : les Services exposent **`port: 80`** (`targetPort: 8080`). Toutes les URLs
-  internes doivent donc utiliser `http://<svc>.quizup-prod.svc.cluster.local` (**pas** `:8080`),
+  internes doivent donc utiliser `http://quizup-<svc>.quizup-prod.svc.cluster.local` (**pas** `:8080`),
   sinon timeouts (`HTTP 000`) — concernait les routes gateway et `QUIZUP_AUTH_SERVER_URL/JWKS`.
+- **Découverte des pairs (bus Axon)** : en prod, `SPRING_CLOUD_KUBERNETES_ENABLED=true` et
+  `SPRING_CLOUD_KUBERNETES_DISCOVERY_ENABLED=true` (SDK, dépendance `spring-cloud-starter-kubernetes-client`).
+  Le RBAC `infrastructure/rbac.yml` (Role/RoleBinding, SA `default`) est **requis** sinon
+  `403 Forbidden` sur `list services/endpoints`. Le SDK filtre sur `app.kubernetes.io/component=axon`
+  (les non-Axon comme `quizup-gateway`/`quizup-web` ne sont pas découverts). En local, découverte
+  désactivée : les `application-local.yml` déclarent `spring.cloud.discovery.client.simple.instances`.
 - **`server-client` (OAuth2)** : un id de registration contenant un tiret **ne peut pas** être bindé
   depuis une variable d'environnement (`..._REGISTRATION_SERVER_CLIENT_...` → `server.client`). La
   config OAuth2 est donc passée via **`SPRING_APPLICATION_JSON`** (`infrastructure/service-common-config.yml`).

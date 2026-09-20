@@ -1,0 +1,183 @@
+# Règles d'alerte QuizUp (métriques Prometheus/Micrometer, node-exporter, KSM, exporters).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: quizup-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: quizup
+spec:
+  groups:
+    - name: quizup.node
+      rules:
+        - alert: NodeDown
+          expr: up{job="node-exporter"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Nœud Raspberry Pi injoignable"
+            description: "Le node-exporter {{ $labels.instance }} est down depuis 5 minutes."
+        - alert: NodeHighCpuTemperature
+          expr: pi_cpu_temperature_celsius > 75
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Température CPU élevée sur {{ $labels.instance }}"
+            description: "Température {{ $value | printf \"%.1f\" }}°C (> 75°C) depuis 10 min."
+        - alert: NodeThrottled
+          expr: pi_throttled_throttled == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "CPU throttlé sur {{ $labels.instance }}"
+            description: "Le Pi throttle (thermique ou alimentation). Vérifier ventilation/alimentation."
+        - alert: NodeUnderVoltage
+          expr: pi_throttled_under_voltage == 1
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Sous-tension détectée sur {{ $labels.instance }}"
+            description: "Alimentation insuffisante (undervoltage) — risque de throttling/instabilité."
+        - alert: NodeFilesystemSpaceFillingUp
+          expr: |
+            (
+              node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat|ramfs"}
+              / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat|ramfs"}
+            ) < 0.15
+            and
+            (
+              node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat|ramfs"}
+              / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs|squashfs|vfat|ramfs"}
+            ) > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Disque presque plein sur {{ $labels.instance }} ({{ $labels.mountpoint }})"
+            description: "Il reste moins de 15% d'espace disque."
+        - alert: NodeMemoryHigh
+          expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.9
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Mémoire saturée sur {{ $labels.instance }}"
+            description: "Plus de 90% de la RAM utilisée depuis 10 min."
+
+    - name: quizup.kubernetes
+      rules:
+        - alert: KubePodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total{namespace=~"quizup-prod|monitoring"}[15m]) > 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod en CrashLoop : {{ $labels.namespace }}/{{ $labels.pod }}"
+            description: "{{ $value | printf \"%.0f\" }} redémarrages en 15 min."
+        - alert: KubeDeploymentUnavailable
+          expr: |
+            kube_deployment_status_replicas_available{namespace=~"quizup-prod|monitoring"}
+              < kube_deployment_spec_replicas{namespace=~"quizup-prod|monitoring"}
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Deployment indisponible : {{ $labels.namespace }}/{{ $labels.deployment }}"
+            description: "Répliques disponibles inférieures au souhaité depuis 10 min."
+
+    - name: quizup.apps
+      rules:
+        - alert: QuizupServiceDown
+          expr: |
+            up{namespace="quizup-prod",
+                job=~"gateway|identity|theme|game|social|matchmaking|profile|leaderboard"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Service QuizUp injoignable : {{ $labels.job }}"
+            description: "Prometheus ne scrape plus {{ $labels.job }} depuis 2 min."
+        - alert: QuizupGatewayHighErrorRate
+          expr: |
+            (
+              sum(rate(http_server_requests_seconds_count{application="quizup-gateway", outcome="SERVER_ERROR"}[5m]))
+              /
+              sum(rate(http_server_requests_seconds_count{application="quizup-gateway"}[5m]))
+            ) > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Taux d'erreur 5xx élevé sur le gateway"
+            description: "Plus de 5% des requêtes du gateway sont en erreur serveur."
+        - alert: QuizupGatewayHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(http_server_requests_seconds_bucket{application="quizup-gateway"}[5m]))
+            ) > 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Latence p95 élevée sur le gateway"
+            description: "Le p95 des requêtes gateway dépasse 1s depuis 10 min."
+        - alert: QuizupJvmHeapHigh
+          expr: |
+            (
+              sum by (application) (jvm_memory_used_bytes{application=~"quizup-.*", area="heap"})
+              /
+              sum by (application) (jvm_memory_max_bytes{application=~"quizup-.*", area="heap"})
+            ) > 0.9
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Heap JVM saturé : {{ $labels.application }}"
+            description: "Le tas utilisé dépasse 90% du max alloué depuis 10 min."
+
+    - name: quizup.platform
+      rules:
+        - alert: PostgresDown
+          expr: pg_up == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Postgres injoignable"
+            description: "postgres_exporter ne peut plus joindre la base depuis 2 min."
+        - alert: KafkaDown
+          expr: up{job="kafka-exporter"} == 0 or kafka_brokers < 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Kafka injoignable"
+            description: "Aucun broker Kafka détecté depuis 2 min."
+        - alert: KafkaConsumerLagHigh
+          expr: sum by (consumergroup) (kafka_consumergroup_lag) > 1000
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Lag Kafka élevé : {{ $labels.consumergroup }}"
+            description: "Le consumer group {{ $labels.consumergroup }} accuse un lag > 1000 depuis 10 min."
+        - alert: QuizupPublicEndpointDown
+          expr: probe_success{job="blackbox-quizup"} == 0
+          for: 3m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Endpoint public down : {{ $labels.instance }}"
+            description: "La sonde blackbox échoue depuis 3 min."
+        - alert: CertificateExpiringSoon
+          expr: (probe_ssl_earliest_cert_expiry{job="blackbox-quizup"} - time()) / 86400 < 14
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "Certificat TLS bientôt expiré : {{ $labels.instance }}"
+            description: "Le certificat expire dans moins de 14 jours."

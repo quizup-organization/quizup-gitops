@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-pi-node
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: quizup
+data:
+  pi-node.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["quizup", "raspberry-pi"],
+      "title": "QuizUp — Raspberry Pi",
+      "uid": "quizup-pi-node",
+      "version": 1,
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "browser",
+      "templating": { "list": [] },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Température CPU",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "celsius", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "pi_cpu_temperature_celsius", "legendFormat": "{{instance}}" } ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "Load average (1m)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "node_load1", "legendFormat": "{{instance}}" } ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Mémoire utilisée",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100", "legendFormat": "{{instance}}" }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Disque utilisé",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "(1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|squashfs|vfat\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|squashfs|vfat\"}) * 100", "legendFormat": "{{instance}} {{mountpoint}}" }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Réseau reçu / émis",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "Bps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])", "legendFormat": "rx {{instance}} {{device}}" },
+            { "refId": "B", "expr": "rate(node_network_transmit_bytes_total{device!=\"lo\"}[5m])", "legendFormat": "tx {{instance}} {{device}}" }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Tension / throttling (Pi)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "pi_throttled_under_voltage", "legendFormat": "unders-voltage {{instance}}" },
+            { "refId": "B", "expr": "pi_throttled_frequency_capped", "legendFormat": "freq-capped {{instance}}" },
+            { "refId": "C", "expr": "pi_throttled_throttled", "legendFormat": "throttled {{instance}}" },
+            { "refId": "D", "expr": "pi_throttled_soft_temp_limit", "legendFormat": "soft-temp-limit {{instance}}" }
+          ]
+        }
+      ]
+    }

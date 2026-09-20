@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Pas de transformeur `namespace:` global : les ServiceMonitors d'application doivent vivre
+# dans `quizup-prod` (un ServiceMonitor ne peut sélectionner que des Services de son namespace).
+resources:
+  - service-monitors.yml
+  - probes.yml
+  - prometheus-rules.yml
+  - alertmanager-config.yml
+  - kafka-exporter.yml
+  - postgres-exporter.yml
+  - dashboards/quizup-overview.yml
+  - dashboards/pi-node.yml

@@ -11,6 +11,7 @@
 #   ./scripts/seal-secrets.sh identity
 #   ./scripts/seal-secrets.sh infra
 #   ./scripts/seal-secrets.sh ghcr-pull
+#   ./scripts/seal-secrets.sh monitoring
 #
 set -euo pipefail
 
@@ -35,6 +36,17 @@ seal_docker() {
     | kubeseal --cert "${SEALED_SECRETS_CERT}" --format=yaml \
     > "${ROOT_DIR}/${out}"
   echo "sealed: ${out}"
+}
+
+# Ajoute un SealedSecret à un fichier multi-documents (sans écraser le contenu existant).
+append_sealed_generic() {
+  local ns="$1" name="$2" out="$3"
+  shift 3
+  kubectl create secret generic "${name}" --namespace "${ns}" "$@" \
+    --dry-run=client -o json \
+    | kubeseal --cert "${SEALED_SECRETS_CERT}" --format=yaml \
+    >> "${ROOT_DIR}/${out}"
+  echo "sealed: ${out} (${name})"
 }
 
 # Secret client OAuth2 `server-client` (client_credentials) partagé par les services.
@@ -71,6 +83,13 @@ seal_identity() {
     --from-literal=QUIZUP_IDENTITY_JWK="${IDENTITY_JWK:-}"
 }
 
+# Secret additionnel d'identity : client OIDC `grafana` (confidentiel).
+# Séparé du secret principal pour ne pas avoir à le resceller en entier.
+seal_identity_grafana() {
+  seal_generic quizup-prod quizup-identity-grafana apps/identity/grafana-sealed-secret.yml \
+    --from-literal=QUIZUP_GRAFANA_CLIENT_SECRET="${GRAFANA_OIDC_CLIENT_SECRET:?GRAFANA_OIDC_CLIENT_SECRET manquant}"
+}
+
 seal_infra() {
   seal_generic quizup-prod quizup-infra-secret infrastructure/sealed-secret.yml \
     --from-literal=POSTGRES_PASSWORD="${INFRA_POSTGRES_PASSWORD:?INFRA_POSTGRES_PASSWORD manquant}"
@@ -82,6 +101,22 @@ seal_ghcr() {
     --docker-username="${GHCR_USERNAME:?GHCR_USERNAME manquant}" \
     --docker-password="${GHCR_TOKEN:?GHCR_TOKEN manquant}" \
     --docker-email="${GHCR_EMAIL:-unused@quizup.local}"
+}
+
+# Secrets de la stack d'observabilité (namespace `monitoring`).
+seal_monitoring() {
+  local out="monitoring/secrets/sealed-secret.yml"
+  : > "${ROOT_DIR}/${out}"
+
+  append_sealed_generic monitoring grafana-admin "${out}" \
+    --from-literal=admin-user="${GRAFANA_ADMIN_USER:-admin}" \
+    --from-literal=admin-password="${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD manquant}"
+
+  append_sealed_generic monitoring grafana-oidc "${out}" \
+    --from-literal=GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET="${GRAFANA_OIDC_CLIENT_SECRET:?GRAFANA_OIDC_CLIENT_SECRET manquant}"
+
+  append_sealed_generic monitoring telegram-alertmanager "${out}" \
+    --from-literal=bot-token="${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN manquant}"
 }
 
 seal_all() {
@@ -97,12 +132,14 @@ seal_all() {
 case "${1:-all}" in
   all) seal_all ;;
   identity) seal_identity ;;
+  identity-grafana) seal_identity_grafana ;;
   gateway) seal_gateway ;;
   infra) seal_infra ;;
   ghcr-pull) seal_ghcr ;;
+  monitoring) seal_monitoring ;;
   theme|game|social|matchmaking|profile|leaderboard) seal_service "$1" ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|identity|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
     exit 1
     ;;
 esac

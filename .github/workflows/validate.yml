@@ -18,7 +18,7 @@ jobs:
       - name: Render every kustomization
         run: |
           set -euo pipefail
-          for dir in infrastructure apps/*; do
+          for dir in infrastructure monitoring monitoring/secrets apps/*; do
             [ -f "${dir}/kustomization.yml" ] || continue
             echo "::group::kustomize ${dir}"
             kubectl kustomize "${dir}" > /dev/null

@@ -15,6 +15,9 @@ Déployer QuizUp sur le cluster k3s via ArgoCD :
 - **`apps/<service>/`** : Deployment, Service, ConfigMap, Ingress, SealedSecret, Kustomization.
 - **Addons via ArgoCD Applications** : `cert-manager`, `sealed-secrets`, `letsencrypt-issuer`
   (ClusterIssuer HTTP-01, solver Traefik) et `argocd-image-updater` (maj des tags d'images).
+- **Observabilité** : `kube-prometheus-stack` (Prometheus/Grafana/Alertmanager/node-exporter/KSM)
+  + `prometheus-blackbox-exporter` + ressources `monitoring/` (ServiceMonitors, Probes,
+  PrometheusRules, exporters Postgres/Kafka, dashboards as code, AlertmanagerConfig Telegram).
 
 Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-infrastructure`**.
 
@@ -27,6 +30,9 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 - TLS : `cert-manager.io/cluster-issuer: letsencrypt-prod` (**HTTP-01** via Traefik).
 - Secrets : **jamais en clair** → `scripts/seal-secrets.sh` (kubeseal).
 - Toutes les apps sont dans le namespace `quizup-prod` ; addons dans `cert-manager` / `sealed-secrets`.
+- **Observabilité** : namespace `monitoring`. Grafana sur `grafana.quizup.cnadjim.fr` (TLS
+  `letsencrypt-prod`, OIDC identity + admin break-glass). Prometheus/Alertmanager/Grafana/Loki ont
+  des PVC `local-path`.
 - Déploiement des images : **ArgoCD Image Updater** (git write-back du `newTag`), via le CR
   `argocd/image-updater/` et les annotations `argocd-image-updater.argoproj.io/*` sur les
   Applications. Plus de `repository_dispatch` / `update-image.yml`.
@@ -81,3 +87,39 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   (RBAC restreint à ce namespace) ; `write-back-method: git`, `git-branch: main`.
 - **`leaderboard`** nécessite son `application-prod.yml` (datasource/kafka/jwt) comme les autres.
 - **Frontend** : les variables Vite sont **inlinées au build** (voir `web/.github/workflows/release.yml`).
+
+---
+
+## 6. Observabilité
+
+Stack auto-hébergée dans le namespace **`monitoring`**, déployée par ArgoCD en sync-waves :
+
+| Application (wave)                 | Source                             | Rôle |
+|------------------------------------|------------------------------------|------|
+| `monitoring-secrets` (0)           | `monitoring/secrets/`              | SealedSecrets Grafana admin/OIDC + Telegram |
+| `kube-prometheus-stack` (1)        | Helm `prometheus-community`        | Prometheus (15j, 8Gi), Alertmanager (1Gi), Grafana (2Gi), node-exporter, KSM |
+| `prometheus-blackbox-exporter` (1) | Helm `prometheus-community`        | Sondes HTTP/TLS des endpoints publics |
+| `monitoring` (2)                   | `monitoring/` (kustomize)          | ServiceMonitors, Probes, PrometheusRules, exporters Postgres/Kafka, dashboards, AlertmanagerConfig |
+
+**Métriques applicatives** : les 8 services exposent `/actuator/prometheus` (Micrometer, endpoint
+`permitAll`). `monitoring/service-monitors.yml` les scrape via le port de Service `http`
+(`jobLabel: app`). Les tags `application`/`environment`/`version` viennent du SDK
+(`ObservabilityAutoConfiguration`).
+
+**Grafana** : `https://grafana.quizup.cnadjim.fr` — OIDC via `quizup-identity` (client `grafana`
+**confidentiel** : `client_secret_basic` + PKCE ; `auth_url` public, `token_url`/`api_url`
+**in-cluster**), rôle Admin si claim `roles` contient `ROLE_ADMIN`, sinon Viewer. Admin local
+(break-glass) via le secret `grafana-admin`.
+Le client secret OIDC est porté par le SealedSecret `quizup-identity-grafana` (namespace
+`quizup-prod`), injecté dans le Deployment identity via `envFrom`.
+
+**Dashboard as code** : ConfigMaps labellisées `grafana_dashboard: "1"` dans `monitoring/dashboards/`
+(chargées par le sidecar Grafana, `searchNamespace: monitoring`).
+
+**Alertes** : `monitoring/prometheus-rules.yml` (node/Pi, Kubernetes, apps, plateforme) →
+`AlertmanagerConfig` Telegram (`monitoring/alertmanager-config.yml`). Le `chatID` est à renseigner
+(inline, non secret) ; le token du bot vient du secret scellé `telegram-alertmanager`.
+
+**Générer les secrets** : `SEALED_SECRETS_CERT=./sealed-secrets-cert.pem ./scripts/seal-secrets.sh monitoring`
+(variables : `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_OIDC_CLIENT_SECRET`, `TELEGRAM_BOT_TOKEN`) et
+`... ./scripts/seal-secrets.sh identity-grafana` (`GRAFANA_OIDC_CLIENT_SECRET`).

@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-quizup-overview
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: quizup
+data:
+  quizup-overview.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["quizup"],
+      "title": "QuizUp — Vue d'ensemble",
+      "uid": "quizup-overview",
+      "version": 1,
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "application",
+            "label": "Application",
+            "type": "custom",
+            "multi": true,
+            "includeAll": true,
+            "allValue": "quizup-.*",
+            "current": { "text": "All", "value": "$__all" },
+            "options": [
+              { "text": "quizup-gateway", "value": "quizup-gateway" },
+              { "text": "quizup-identity", "value": "quizup-identity" },
+              { "text": "quizup-theme", "value": "quizup-theme" },
+              { "text": "quizup-game", "value": "quizup-game" },
+              { "text": "quizup-social", "value": "quizup-social" },
+              { "text": "quizup-matchmaking", "value": "quizup-matchmaking" },
+              { "text": "quizup-profile", "value": "quizup-profile" },
+              { "text": "quizup-leaderboard", "value": "quizup-leaderboard" }
+            ]
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "stat",
+          "title": "Services UP",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 8 } ] } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "sum(up{namespace=\"quizup-prod\"})" } ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Endpoints publics UP",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 3 } ] } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "sum(probe_success{job=\"blackbox-quizup\"})" } ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
+          "title": "Température CPU max (Pi)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "celsius", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 80 } ] } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "max(pi_cpu_temperature_celsius)" } ]
+        },
+        {
+          "id": 4,
+          "type": "stat",
+          "title": "Throttling Pi",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "max(pi_throttled_throttled)" } ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Requêtes /s par service",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$application\"}[5m]))", "legendFormat": "{{application}}" }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "timeseries",
+          "title": "Taux d'erreur 5xx",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (application) (rate(http_server_requests_seconds_count{application=~\"$application\", outcome=\"SERVER_ERROR\"}[5m])) / sum by (application) (rate(http_server_requests_seconds_count{application=~\"$application\"}[5m]))", "legendFormat": "{{application}}" }
+          ]
+        },
+        {
+          "id": 7,
+          "type": "timeseries",
+          "title": "Latence p95 par service",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, application) (rate(http_server_requests_seconds_bucket{application=~\"$application\"}[5m])))", "legendFormat": "{{application}}" }
+          ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Heap JVM utilisée",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum by (application) (jvm_memory_used_bytes{application=~\"$application\", area=\"heap\"}) / sum by (application) (jvm_memory_max_bytes{application=~\"$application\", area=\"heap\"})", "legendFormat": "{{application}}" }
+          ]
+        }
+      ]
+    }

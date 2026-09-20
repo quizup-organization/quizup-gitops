@@ -1,0 +1,23 @@
+# Sondes blackbox des endpoints publics : disponibilité HTTP + expiration TLS.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: quizup-public-endpoints
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: quizup
+spec:
+  jobName: blackbox-quizup
+  interval: 60s
+  scrapeTimeout: 10s
+  module: http_2xx
+  prober:
+    url: prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      labels:
+        probe_group: public
+      static:
+        - https://app.quizup.cnadjim.fr
+        - https://api.quizup.cnadjim.fr
+        - https://identity.quizup.cnadjim.fr

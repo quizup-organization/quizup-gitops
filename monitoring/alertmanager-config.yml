@@ -1,0 +1,34 @@
+# Routage Alertmanager -> Telegram.
+# Le token du bot est lu depuis le Secret scellé `telegram-alertmanager` (clé `bot-token`).
+# `chatID` = identifiant du chat/groupe Telegram cible (non secret) ; le modifier ici si besoin.
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: telegram
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: quizup
+spec:
+  route:
+    receiver: telegram
+    groupBy:
+      - namespace
+      - alertname
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+  receivers:
+    - name: telegram
+      telegramConfigs:
+        - botToken:
+            name: telegram-alertmanager
+            key: bot-token
+          chatID: -5401485917
+          parseMode: Markdown
+          sendResolved: true
+          message: |-
+            {{ range .Alerts -}}
+            [{{ .Status | toUpper }}] *{{ .Labels.alertname }}*
+            {{ .Annotations.summary }}
+            {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+            {{ end }}

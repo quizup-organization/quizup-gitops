@@ -1,0 +1,182 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 91.4.1
+    helm:
+      releaseName: kube-prometheus-stack
+      values: |
+        crds:
+          enabled: true
+
+        # k3s : les composants control-plane ne sont pas exposés séparément (targets DOWN sinon).
+        kubeEtcd:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeProxy:
+          enabled: false
+
+        prometheus:
+          prometheusSpec:
+            retention: 15d
+            retentionSize: 6GB
+            scrapeInterval: 30s
+            # Les ServiceMonitor/PodMonitor/Probe/PrometheusRule sont découverts dans TOUS
+            # les namespaces : les services QuizUp vivent dans `quizup-prod`.
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorNamespaceSelector: {}
+            podMonitorSelectorNilUsesHelmValues: false
+            podMonitorNamespaceSelector: {}
+            probeSelectorNilUsesHelmValues: false
+            probeNamespaceSelector: {}
+            ruleSelectorNilUsesHelmValues: false
+            ruleNamespaceSelector: {}
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: "1"
+                memory: 1Gi
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-path
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 8Gi
+
+        alertmanager:
+          alertmanagerSpec:
+            # Les AlertmanagerConfig (dont la config Telegram) sont découverts dans tous les namespaces.
+            alertmanagerConfigSelector: {}
+            alertmanagerConfigNamespaceSelector: {}
+            resources:
+              requests:
+                cpu: 50m
+                memory: 96Mi
+              limits:
+                memory: 192Mi
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: local-path
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 1Gi
+
+        grafana:
+          enabled: true
+          admin:
+            existingSecret: grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt-prod
+            hosts:
+              - grafana.quizup.cnadjim.fr
+            tls:
+              - secretName: grafana-tls
+                hosts:
+                  - grafana.quizup.cnadjim.fr
+          # Secret OIDC injecté en variables d'environnement (le secret n'apparaît jamais
+          # dans la ConfigMap `grafana.ini`, cf. `assertNoLeakedSecrets`).
+          envFromSecret: grafana-oidc
+          "grafana.ini":
+            server:
+              root_url: https://grafana.quizup.cnadjim.fr
+            "auth.generic_oauth":
+              enabled: true
+              name: QuizUp
+              allow_sign_up: true
+              client_id: grafana
+              client_secret: $__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}
+              scopes: openid profile email
+              # auth_url = URL publique (navigateur) ; token/api in-cluster (évite le hairpin NAT).
+              auth_url: https://identity.quizup.cnadjim.fr/oauth2/authorize
+              token_url: http://identity.quizup-prod.svc.cluster.local/oauth2/token
+              api_url: http://identity.quizup-prod.svc.cluster.local/userinfo
+              use_pkce: true
+              role_attribute_path: "contains(roles, 'ROLE_ADMIN') && 'Admin' || 'Viewer'"
+              role_attribute_strict: false
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              searchNamespace: monitoring
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              memory: 384Mi
+          persistence:
+            enabled: true
+            storageClassName: local-path
+            size: 2Gi
+
+        prometheus-node-exporter:
+          # Exclusions par défaut du chart + collector textfile (température / throttling Pi,
+          # alimenté par un timer systemd déployé par quizup-infrastructure).
+          extraArgs:
+            - --collector.filesystem.mount-points-exclude=^/(dev|proc|sys|run/containerd/.+|var/lib/docker/.+|var/lib/kubelet/.+)($|/)
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs|erofs)$
+            - --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+          extraHostVolumeMounts:
+            - name: textfile-collector
+              hostPath: /var/lib/node_exporter/textfile_collector
+              type: DirectoryOrCreate
+              mountPath: /var/lib/node_exporter/textfile_collector
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 96Mi
+
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              memory: 192Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

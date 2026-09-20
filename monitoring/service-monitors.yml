@@ -1,0 +1,75 @@
+# Scrape /actuator/prometheus des microservices QuizUp.
+# Tous exposent le port de Service nommé `http` (80 -> 8080), endpoint permitAll côté sécurité.
+# Le job label vaut le label `app` du Service (`game`, `gateway`, `identity`, ...).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: quizup-services
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+spec:
+  jobLabel: app
+  namespaceSelector:
+    matchNames:
+      - quizup-prod
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - gateway
+          - identity
+          - theme
+          - game
+          - social
+          - matchmaking
+          - profile
+          - leaderboard
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 30s
+      scrapeTimeout: 10s
+      # Conserve les labels applicatifs (application/environment/version) plutôt que de les écraser.
+      honorLabels: true
+---
+# Exporter Postgres (déployé dans quizup-prod, à côté de la base).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres-exporter
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+spec:
+  jobLabel: app
+  selector:
+    matchLabels:
+      app: postgres-exporter
+  namespaceSelector:
+    matchNames:
+      - quizup-prod
+  endpoints:
+    - port: metrics
+      interval: 30s
+---
+# Exporter Kafka (déployé dans monitoring).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kafka-exporter
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: quizup
+spec:
+  jobLabel: app
+  selector:
+    matchLabels:
+      app: kafka-exporter
+  namespaceSelector:
+    matchNames:
+      - monitoring
+  endpoints:
+    - port: metrics
+      interval: 30s

@@ -30,6 +30,8 @@ spec:
                 name: quizup-identity-config
             - secretRef:
                 name: quizup-identity-secret
+            - secretRef:
+                name: quizup-identity-grafana
           resources:
             requests:
               cpu: 150m

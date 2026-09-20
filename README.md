@@ -12,6 +12,7 @@ GitOps repository (ArgoCD app-of-apps) for the QuizUp Kubernetes cluster hosted 
 | `app.quizup.cnadjim.fr`      | frontend (`quizup-web`, nginx)   |
 | `api.quizup.cnadjim.fr`      | gateway (REST + WebSocket STOMP) |
 | `identity.quizup.cnadjim.fr` | identity (OIDC issuer / JWT)     |
+| `grafana.quizup.cnadjim.fr`  | observabilité (Grafana / OIDC)   |
 
 - Cluster: **k3s** (1 server + 1 agent), ingress **Traefik** (bundled), storage **local-path**.
 - Images: **`ghcr.io/quizup-organization/<service>`**, built for **linux/arm64** (private → `ghcr-pull` secret).
@@ -25,6 +26,7 @@ argocd/           # root app-of-apps + one Application per addon/app
 namespaces/       # namespaces created before anything else
 cert-manager/     # ClusterIssuer letsencrypt-prod (HTTP-01, solver Traefik)
 infrastructure/   # Postgres, Kafka (KRaft), shared service config, infra sealed-secret
+monitoring/       # Prometheus/Grafana/Alertmanager, ServiceMonitors, Probes, rules, dashboards
 apps/<service>/   # Deployment + Service + ConfigMap + Ingress + sealed-secret + kustomization
 scripts/          # seal-secrets.sh (kubeseal helper)
 .github/workflows # validate (kustomize + yamllint)
@@ -49,6 +51,18 @@ challenge through Traefik. No OVH API key and no DNS-01 webhook are required.
 
 Prerequisites: the DNS A records already point to the public IP (DDNS DynHost) and **port 80**
 is reachable from the Internet.
+
+## Observabilité (monitoring)
+
+Stack auto-hébergée dans le namespace `monitoring` :
+
+- **kube-prometheus-stack** (Helm) : Prometheus, Alertmanager, Grafana, node-exporter, kube-state-metrics.
+- **prometheus-blackbox-exporter** : sondes HTTP/TLS des endpoints publics.
+- **`monitoring/`** : ServiceMonitors (`/actuator/prometheus`), Probes, PrometheusRules, exporters
+  Postgres/Kafka, dashboards Grafana as code, routage Telegram.
+
+Grafana : `https://grafana.quizup.cnadjim.fr` — OIDC `quizup-identity` (client `grafana`) + admin
+local scellé. Secrets générés avec `./scripts/seal-secrets.sh monitoring`.
 
 ## Image updates (GitOps flow)
 

@@ -5,6 +5,7 @@ resources:
   - manifests.yml
   - ingress.yml
   - sealed-secret.yml
+  - grafana-sealed-secret.yml
 images:
   - name: ghcr.io/quizup-organization/identity
     newTag: "1.0.1"

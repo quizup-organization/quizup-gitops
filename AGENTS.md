@@ -95,6 +95,10 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   (`quizup.contacts@gmail.com`) est aussi admin et sert de bot.
 - **Seeding** : `QUIZUP_SEED_DATA_ENABLED=true` pour `identity` (compte système), `profile`
   (profil système) et `theme` (4 sujets de départ). Seeders idempotents.
+- **Resend** : l'envoi OTP échoue en `403 validation_error` tant que le domaine de `QUIZUP_MAIL_FROM`
+  (`quizup.cnadjim.fr`) n'est pas **vérifié dans Resend** (ajouter les enregistrements SPF/DKIM DNS).
+  Le endpoint `/api/auth/request-code` renvoie quand même `202` (anti-énumération) : vérifier les
+  logs identity (`Failed to send login code`).
 
 ---
 

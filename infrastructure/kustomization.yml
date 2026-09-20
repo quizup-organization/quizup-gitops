@@ -7,5 +7,6 @@ resources:
   - postgres-init.yml
   - postgres.yml
   - kafka.yml
+  - rbac.yml
   - sealed-secret.yml
   - registry-secret.yml

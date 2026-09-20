@@ -4,15 +4,18 @@ metadata:
   name: quizup-web
   namespace: quizup-prod
   labels:
+    app.kubernetes.io/part-of: quizup
     app: quizup-web
 spec:
   replicas: 1
   selector:
     matchLabels:
+      app.kubernetes.io/part-of: quizup
       app: quizup-web
   template:
     metadata:
       labels:
+        app.kubernetes.io/part-of: quizup
         app: quizup-web
     spec:
       imagePullSecrets:
@@ -49,9 +52,11 @@ metadata:
   name: quizup-web
   namespace: quizup-prod
   labels:
+    app.kubernetes.io/part-of: quizup
     app: quizup-web
 spec:
   selector:
+    app.kubernetes.io/part-of: quizup
     app: quizup-web
   ports:
     - name: http

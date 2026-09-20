@@ -1,24 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: leaderboard
+  name: quizup-leaderboard
   namespace: quizup-prod
   labels:
-    app: leaderboard
+    app.kubernetes.io/part-of: quizup
+    app: quizup-leaderboard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: leaderboard
+      app.kubernetes.io/part-of: quizup
+      app: quizup-leaderboard
   template:
     metadata:
       labels:
-        app: leaderboard
+        app.kubernetes.io/part-of: quizup
+        app: quizup-leaderboard
     spec:
       imagePullSecrets:
         - name: ghcr-pull
       containers:
-        - name: leaderboard
+        - name: quizup-leaderboard
           image: ghcr.io/quizup-organization/leaderboard:1.0.0
           imagePullPolicy: IfNotPresent
           env:
@@ -66,13 +69,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: leaderboard
+  name: quizup-leaderboard
   namespace: quizup-prod
   labels:
-    app: leaderboard
+    app.kubernetes.io/part-of: quizup
+    app: quizup-leaderboard
 spec:
   selector:
-    app: leaderboard
+    app.kubernetes.io/part-of: quizup
+    app: quizup-leaderboard
   ports:
     - name: http
       protocol: TCP

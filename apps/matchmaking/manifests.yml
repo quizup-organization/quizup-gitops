@@ -1,24 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: matchmaking
+  name: quizup-matchmaking
   namespace: quizup-prod
   labels:
-    app: matchmaking
+    app.kubernetes.io/part-of: quizup
+    app: quizup-matchmaking
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: matchmaking
+      app.kubernetes.io/part-of: quizup
+      app: quizup-matchmaking
   template:
     metadata:
       labels:
-        app: matchmaking
+        app.kubernetes.io/part-of: quizup
+        app: quizup-matchmaking
     spec:
       imagePullSecrets:
         - name: ghcr-pull
       containers:
-        - name: matchmaking
+        - name: quizup-matchmaking
           image: ghcr.io/quizup-organization/matchmaking:1.0.0
           imagePullPolicy: IfNotPresent
           env:
@@ -66,13 +69,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: matchmaking
+  name: quizup-matchmaking
   namespace: quizup-prod
   labels:
-    app: matchmaking
+    app.kubernetes.io/part-of: quizup
+    app: quizup-matchmaking
 spec:
   selector:
-    app: matchmaking
+    app.kubernetes.io/part-of: quizup
+    app: quizup-matchmaking
   ports:
     - name: http
       protocol: TCP

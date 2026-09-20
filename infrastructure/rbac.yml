@@ -1,0 +1,26 @@
+# RBAC pour la découverte Kubernetes (Spring Cloud Kubernetes) des microservices QuizUp.
+# Le ServiceAccount `default` (utilisé par tous les Deployments) doit pouvoir lister/watcher
+# les Services et Endpoints du namespace pour alimenter le DiscoveryClient natif.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: quizup-discovery
+  namespace: quizup-prod
+rules:
+  - apiGroups: [""]
+    resources: ["services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: quizup-discovery
+  namespace: quizup-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: quizup-discovery
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: quizup-prod

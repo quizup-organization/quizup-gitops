@@ -5,6 +5,10 @@
 # Le client OAuth2 est déclaré via SPRING_APPLICATION_JSON : un id de registration contenant un
 # tiret (`server-client`) ne peut pas être bindé depuis une variable d'environnement classique
 # (`..._REGISTRATION_SERVER_CLIENT_...` est interprété comme `server.client`).
+#
+# Découverte des pairs : en prod on active le DiscoveryClient Kubernetes
+# (SPRING_CLOUD_KUBERNETES_ENABLED=true) ; en local, chaque application-local.yml déclare
+# spring.cloud.discovery.client.simple.instances (URLs).
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -17,8 +21,13 @@ data:
   # distinct de spring.kafka.bootstrap-servers utilisé par Spring Kafka.
   AXON_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
-  QUIZUP_AUTH_SERVER_URL: http://identity.quizup-prod.svc.cluster.local
-  QUIZUP_AUTH_SERVER_JWKS_URL: http://identity.quizup-prod.svc.cluster.local/oauth2/jwks
+  QUIZUP_AUTH_SERVER_URL: http://quizup-identity.quizup-prod.svc.cluster.local
+  QUIZUP_AUTH_SERVER_JWKS_URL: http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/jwks
+
+  # Découverte Kubernetes native (prod). Désactivée par défaut dans le SDK
+  # (spring.cloud.kubernetes.discovery.enabled=false).
+  SPRING_CLOUD_KUBERNETES_ENABLED: "true"
+  SPRING_CLOUD_KUBERNETES_DISCOVERY_ENABLED: "true"
 
   # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
   # L'endpoint OTLP par défaut du SDK pointe vers otel-collector.monitoring.
@@ -36,4 +45,4 @@ data:
   SPRINGDOC_PATHS_TO_EXCLUDE: /command-capabilities,/query-capabilities,/command-transport,/spring-command-bus-connector/**,/spring-query-bus-connector/**
 
   SPRING_APPLICATION_JSON: >-
-    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}
+    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}

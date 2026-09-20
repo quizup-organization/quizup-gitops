@@ -1,6 +1,6 @@
 # Scrape /actuator/prometheus des microservices QuizUp.
 # Tous exposent le port de Service nommé `http` (80 -> 8080), endpoint permitAll côté sécurité.
-# Le job label vaut le label `app` du Service (`game`, `gateway`, `identity`, ...).
+# Le job label vaut le label `app` du Service (`quizup-game`, `quizup-gateway`, ...).
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -14,18 +14,8 @@ spec:
     matchNames:
       - quizup-prod
   selector:
-    matchExpressions:
-      - key: app
-        operator: In
-        values:
-          - gateway
-          - identity
-          - theme
-          - game
-          - social
-          - matchmaking
-          - profile
-          - leaderboard
+    matchLabels:
+      app.kubernetes.io/part-of: quizup
   endpoints:
     - port: http
       path: /actuator/prometheus

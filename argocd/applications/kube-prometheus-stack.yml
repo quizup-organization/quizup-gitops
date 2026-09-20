@@ -114,8 +114,8 @@ spec:
               scopes: openid profile email
               # auth_url = URL publique (navigateur) ; token/api in-cluster (évite le hairpin NAT).
               auth_url: https://identity.quizup.cnadjim.fr/oauth2/authorize
-              token_url: http://identity.quizup-prod.svc.cluster.local/oauth2/token
-              api_url: http://identity.quizup-prod.svc.cluster.local/userinfo
+              token_url: http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/token
+              api_url: http://quizup-identity.quizup-prod.svc.cluster.local/userinfo
               use_pkce: true
               role_attribute_path: "contains(roles, 'ROLE_ADMIN') && 'Admin' || 'Viewer'"
               role_attribute_strict: false

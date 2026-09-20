@@ -94,7 +94,7 @@ spec:
         - alert: QuizupServiceDown
           expr: |
             up{namespace="quizup-prod",
-                job=~"gateway|identity|theme|game|social|matchmaking|profile|leaderboard"} == 0
+                job=~"quizup-.*"} == 0
           for: 2m
           labels:
             severity: critical

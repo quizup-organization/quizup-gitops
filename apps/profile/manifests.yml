@@ -1,24 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: profile
+  name: quizup-profile
   namespace: quizup-prod
   labels:
-    app: profile
+    app.kubernetes.io/part-of: quizup
+    app: quizup-profile
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: profile
+      app.kubernetes.io/part-of: quizup
+      app: quizup-profile
   template:
     metadata:
       labels:
-        app: profile
+        app.kubernetes.io/part-of: quizup
+        app: quizup-profile
     spec:
       imagePullSecrets:
         - name: ghcr-pull
       containers:
-        - name: profile
+        - name: quizup-profile
           image: ghcr.io/quizup-organization/profile:1.0.0
           imagePullPolicy: IfNotPresent
           env:
@@ -66,13 +69,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: profile
+  name: quizup-profile
   namespace: quizup-prod
   labels:
-    app: profile
+    app.kubernetes.io/part-of: quizup
+    app: quizup-profile
 spec:
   selector:
-    app: profile
+    app.kubernetes.io/part-of: quizup
+    app: quizup-profile
   ports:
     - name: http
       protocol: TCP

@@ -1,24 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gateway
+  name: quizup-gateway
   namespace: quizup-prod
   labels:
-    app: gateway
+    app.kubernetes.io/part-of: quizup
+    app: quizup-gateway
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gateway
+      app.kubernetes.io/part-of: quizup
+      app: quizup-gateway
   template:
     metadata:
       labels:
-        app: gateway
+        app.kubernetes.io/part-of: quizup
+        app: quizup-gateway
     spec:
       imagePullSecrets:
         - name: ghcr-pull
       containers:
-        - name: gateway
+        - name: quizup-gateway
           image: ghcr.io/quizup-organization/gateway:1.0.0
           imagePullPolicy: IfNotPresent
           env:
@@ -64,13 +67,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: gateway
+  name: quizup-gateway
   namespace: quizup-prod
   labels:
-    app: gateway
+    app.kubernetes.io/part-of: quizup
+    app: quizup-gateway
 spec:
   selector:
-    app: gateway
+    app.kubernetes.io/part-of: quizup
+    app: quizup-gateway
   ports:
     - name: http
       protocol: TCP
@@ -83,13 +88,13 @@ metadata:
   name: quizup-gateway-config
   namespace: quizup-prod
 data:
-  QUIZUP_GATEWAY_IDENTITY_URL: http://identity.quizup-prod.svc.cluster.local
-  QUIZUP_GATEWAY_PROFILE_URL: http://profile.quizup-prod.svc.cluster.local
-  QUIZUP_GATEWAY_GAME_URL: http://game.quizup-prod.svc.cluster.local
-  QUIZUP_GATEWAY_THEME_URL: http://theme.quizup-prod.svc.cluster.local
-  QUIZUP_GATEWAY_SOCIAL_URL: http://social.quizup-prod.svc.cluster.local
-  QUIZUP_GATEWAY_MATCHMAKING_URL: http://matchmaking.quizup-prod.svc.cluster.local
-  QUIZUP_GATEWAY_LEADERBOARD_URL: http://leaderboard.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_IDENTITY_URL: http://quizup-identity.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_PROFILE_URL: http://quizup-profile.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_GAME_URL: http://quizup-game.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_THEME_URL: http://quizup-theme.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_SOCIAL_URL: http://quizup-social.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_MATCHMAKING_URL: http://quizup-matchmaking.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_LEADERBOARD_URL: http://quizup-leaderboard.quizup-prod.svc.cluster.local
   # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
   MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
   QUIZUP_LOG_LEVEL: INFO

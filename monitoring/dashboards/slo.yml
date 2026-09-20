@@ -29,7 +29,7 @@ data:
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
           "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 8 } ] } }, "overrides": [] },
-          "targets": [ { "refId": "A", "expr": "sum(up{namespace=\"quizup-prod\", job=~\"game|gateway|identity|leaderboard|matchmaking|profile|social|theme\"})" } ]
+          "targets": [ { "refId": "A", "expr": "sum(up{namespace=\"quizup-prod\", job=~\"quizup-.*\"})" } ]
         },
         {
           "id": 2,

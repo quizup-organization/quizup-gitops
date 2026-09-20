@@ -32,10 +32,6 @@ data:
   SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
   SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "2"
 
-  # Désactive temporairement l'auto-config Axon Activity (régression 1.4.0 : initialisation
-  # trop précoce des event processors). À retirer après le correctif SDK.
-  SPRING_AUTOCONFIGURE_EXCLUDE: io.github.quizup.axon.autoconfigure.AxonDistributedActivityMetricsAutoConfiguration
-
   # Swagger : masque les endpoints internes Axon (connecteurs distribués, pas d'API publique).
   SPRINGDOC_PATHS_TO_EXCLUDE: /command-capabilities,/query-capabilities,/command-transport,/spring-command-bus-connector/**,/spring-query-bus-connector/**
 

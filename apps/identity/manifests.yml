@@ -13,7 +13,6 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/part-of: quizup
-      app.kubernetes.io/component: axon
       app: quizup-identity
   template:
     metadata:

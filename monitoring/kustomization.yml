@@ -11,3 +11,7 @@ resources:
   - postgres-exporter.yml
   - dashboards/quizup-overview.yml
   - dashboards/pi-node.yml
+  - dashboards/logs.yml
+  - dashboards/slo.yml
+  - dashboards/kpi.yml
+  - grafana-datasources.yml

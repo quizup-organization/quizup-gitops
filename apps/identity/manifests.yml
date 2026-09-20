@@ -102,4 +102,6 @@ data:
   QUIZUP_APP_OAUTH2_FAILURE_URI: https://app.quizup.cnadjim.fr/login?error
   QUIZUP_CORS_ALLOWED_ORIGINS: https://app.quizup.cnadjim.fr
   QUIZUP_SESSION_COOKIE_SECURE: "true"
+  # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
+  MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
   QUIZUP_LOG_LEVEL: INFO

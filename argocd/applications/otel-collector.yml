@@ -1,0 +1,79 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-collector
+  namespace: argocd
+  annotations:
+    # Wave 1 : point d'entrée OTLP des traces, avant l'activation du tracing côté services.
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-collector
+    targetRevision: 0.173.1
+    helm:
+      releaseName: otel-collector
+      values: |
+        mode: deployment
+        replicaCount: 1
+
+        image:
+          repository: otel/opentelemetry-collector
+        command:
+          name: otelcol
+
+        # Config complète (remplace les défauts) : pipeline traces uniquement, vers Tempo.
+        alternateConfig:
+          receivers:
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: 0.0.0.0:4317
+                http:
+                  endpoint: 0.0.0.0:4318
+          processors:
+            memory_limiter:
+              check_interval: 5s
+              limit_percentage: 80
+              spike_limit_percentage: 25
+            batch: {}
+          exporters:
+            otlp/tempo:
+              endpoint: tempo.monitoring.svc.cluster.local:4317
+              tls:
+                insecure: true
+          extensions:
+            health_check:
+              endpoint: 0.0.0.0:13133
+          service:
+            extensions:
+              - health_check
+            pipelines:
+              traces:
+                receivers:
+                  - otlp
+                processors:
+                  - memory_limiter
+                  - batch
+                exporters:
+                  - otlp/tempo
+
+        resources:
+          requests:
+            cpu: 50m
+            memory: 96Mi
+          limits:
+            memory: 256Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

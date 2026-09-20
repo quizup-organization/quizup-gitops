@@ -90,5 +90,7 @@ data:
   QUIZUP_GATEWAY_SOCIAL_URL: http://social.quizup-prod.svc.cluster.local
   QUIZUP_GATEWAY_MATCHMAKING_URL: http://matchmaking.quizup-prod.svc.cluster.local
   QUIZUP_GATEWAY_LEADERBOARD_URL: http://leaderboard.quizup-prod.svc.cluster.local
+  # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
+  MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
   QUIZUP_LOG_LEVEL: INFO
   QUIZUP_GATEWAY_LOG_LEVEL: INFO

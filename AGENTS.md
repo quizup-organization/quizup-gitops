@@ -99,7 +99,11 @@ Stack auto-hébergée dans le namespace **`monitoring`**, déployée par ArgoCD 
 | `monitoring-secrets` (0)           | `monitoring/secrets/`              | SealedSecrets Grafana admin/OIDC + Telegram |
 | `kube-prometheus-stack` (1)        | Helm `prometheus-community`        | Prometheus (15j, 8Gi), Alertmanager (1Gi), Grafana (2Gi), node-exporter, KSM |
 | `prometheus-blackbox-exporter` (1) | Helm `prometheus-community`        | Sondes HTTP/TLS des endpoints publics |
-| `monitoring` (2)                   | `monitoring/` (kustomize)          | ServiceMonitors, Probes, PrometheusRules, exporters Postgres/Kafka, dashboards, AlertmanagerConfig |
+| `loki` (1)                         | Helm `grafana` (`loki` 7.3.0)      | Stockage des logs (SingleBinary, filesystem, 14j, PVC 10Gi) |
+| `tempo` (1)                        | Helm `grafana` (`tempo` 1.24.3)    | Stockage des traces (OTLP, 7j, PVC 5Gi) |
+| `otel-collector` (1)               | Helm `open-telemetry`              | Collecteur OTLP → Tempo |
+| `alloy` (2)                        | Helm `grafana` (`alloy` 1.12.1)    | DaemonSet de collecte des logs (`/var/log/pods`) → Loki |
+| `monitoring` (2)                   | `monitoring/` (kustomize)          | ServiceMonitors, Probes, PrometheusRules, exporters Postgres/Kafka, dashboards, datasources, AlertmanagerConfig |
 
 **Métriques applicatives** : les 8 services exposent `/actuator/prometheus` (Micrometer, endpoint
 `permitAll`). `monitoring/service-monitors.yml` les scrape via le port de Service `http`
@@ -112,6 +116,11 @@ Stack auto-hébergée dans le namespace **`monitoring`**, déployée par ArgoCD 
 (break-glass) via le secret `grafana-admin`.
 Le client secret OIDC est porté par le SealedSecret `quizup-identity-grafana` (namespace
 `quizup-prod`), injecté dans le Deployment identity via `envFrom`.
+
+**Logs / traces** : les services émettent des **logs structurés JSON ECS** (SDK) collectés par
+**Alloy** (DaemonSet) → **Loki** ; les **traces** (Micrometer/Otel + Axon) partent en OTLP vers
+l'**otel-collector** → **Tempo**, activées par `MICROSERVICE_OBSERVABILITY_TRACING_ENABLED=true`.
+Les datasources Loki/Tempo et leurs corrélations sont dans `monitoring/grafana-datasources.yml`.
 
 **Dashboard as code** : ConfigMaps labellisées `grafana_dashboard: "1"` dans `monitoring/dashboards/`
 (chargées par le sidecar Grafana, `searchNamespace: monitoring`).

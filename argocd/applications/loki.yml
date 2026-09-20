@@ -1,0 +1,98 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  annotations:
+    # Wave 1 : stockage des logs, doit être prêt avant Alloy (wave 2).
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 7.3.0
+    helm:
+      releaseName: loki
+      values: |
+        # Mode mono-binaire (tout-en-un) : adapté à un cluster 2× Raspberry Pi.
+        deploymentMode: SingleBinary
+
+        loki:
+          # Pas d'authentification : Loki n'est jamais exposé hors du cluster.
+          auth_enabled: false
+          commonConfig:
+            replication_factor: 1
+          storage:
+            type: filesystem
+          limits_config:
+            retention_period: 336h
+            reject_old_samples: true
+            reject_old_samples_max_age: 168h
+          compactor:
+            retention_enabled: true
+            delete_request_store: filesystem
+          schemaConfig:
+            configs:
+              - from: "2024-04-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: index_
+                  period: 24h
+          pattern_ingester:
+            enabled: false
+
+        singleBinary:
+          replicas: 1
+          persistence:
+            enabled: true
+            storageClass: local-path
+            size: 10Gi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+
+        # Composants du mode distribué explicitement désactivés (SingleBinary uniquement).
+        backend:
+          replicas: 0
+        read:
+          replicas: 0
+        write:
+          replicas: 0
+        ingester:
+          replicas: 0
+        querier:
+          replicas: 0
+        queryFrontend:
+          replicas: 0
+        queryScheduler:
+          replicas: 0
+        distributor:
+          replicas: 0
+        compactor:
+          replicas: 0
+        indexGateway:
+          replicas: 0
+        ruler:
+          replicas: 0
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

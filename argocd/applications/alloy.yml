@@ -1,0 +1,113 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    # Wave 2 : agent de collecte des logs, après Loki (wave 1).
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: alloy
+    targetRevision: 1.12.1
+    helm:
+      releaseName: alloy
+      values: |
+        controller:
+          type: daemonset
+
+        alloy:
+          # Monte /var/log de l'hôte (lecture des logs de conteneurs CRI de k3s).
+          mounts:
+            varlog: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+          configMap:
+            content: |-
+              // Découverte des pods via l'API Kubernetes.
+              discovery.kubernetes "pods" {
+                role = "pod"
+              }
+
+              // Ajoute namespace/pod/container/app/node et construit le chemin du fichier log CRI.
+              discovery.relabel "pod_logs" {
+                targets = discovery.kubernetes.pods.targets
+
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  target_label  = "namespace"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_name"]
+                  target_label  = "pod"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_container_name"]
+                  target_label  = "container"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_label_app"]
+                  target_label  = "app"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_node_name"]
+                  target_label  = "node"
+                }
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+                  separator     = "/"
+                  action        = "replace"
+                  replacement   = "/var/log/pods/*$1/*.log"
+                  target_label  = "__path__"
+                }
+                // Exclut les namespaces système (bruit, pas de logs applicatifs).
+                rule {
+                  source_labels = ["__meta_kubernetes_namespace"]
+                  regex         = "kube-system|kube-public|kube-node-lease"
+                  action        = "drop"
+                }
+              }
+
+              local.file_match "pod_logs" {
+                path_targets = discovery.relabel.pod_logs.output
+              }
+
+              loki.source.file "pod_logs" {
+                targets       = local.file_match.pod_logs.targets
+                forward_to    = [loki.process.pod_logs.receiver]
+                tail_from_end = true
+              }
+
+              // Décode l'en-tête CRI (timestamp + stream) puis pousse vers Loki.
+              loki.process "pod_logs" {
+                stage.cri {}
+
+                forward_to = [loki.write.local.receiver]
+              }
+
+              loki.write "local" {
+                endpoint {
+                  url = "http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+                }
+              }
+
+        serviceMonitor:
+          enabled: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

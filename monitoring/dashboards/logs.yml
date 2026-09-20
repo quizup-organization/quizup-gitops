@@ -18,7 +18,7 @@ data:
       "title": "QuizUp — Logs",
       "uid": "quizup-logs",
       "version": 1,
-      "time": { "from": "now-3h", "to": "now" },
+      "time": { "from": "now-1h", "to": "now" },
       "timezone": "browser",
       "templating": {
         "list": [
@@ -30,35 +30,74 @@ data:
             "query": "label_values({namespace=\"quizup-prod\"}, app)",
             "includeAll": true,
             "multi": true,
+            "allValue": ".*",
             "current": { "selected": true, "text": "All", "value": "$__all" },
             "refresh": 2,
             "sort": 1
+          },
+          {
+            "name": "level",
+            "label": "Niveau",
+            "type": "custom",
+            "includeAll": true,
+            "multi": true,
+            "allValue": ".*",
+            "current": { "selected": true, "text": "All", "value": "$__all" },
+            "options": [
+              { "text": "ERROR", "value": "ERROR|FATAL", "selected": false },
+              { "text": "WARN", "value": "WARN", "selected": false },
+              { "text": "INFO", "value": "INFO", "selected": false },
+              { "text": "DEBUG", "value": "DEBUG|TRACE", "selected": false }
+            ]
           }
         ]
       },
       "panels": [
         {
           "id": 1,
-          "type": "timeseries",
-          "title": "Volume de logs par service",
+          "type": "logs",
+          "title": "Logs QuizUp (ligne formatée)",
+          "description": "Logs JSON ECS reformatés en « NIVEAU [service] message ». Cliquer sur une ligne pour voir les champs et le trace_id.",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+          "gridPos": { "h": 18, "w": 24, "x": 0, "y": 0 },
+          "options": {
+            "showTime": true,
+            "wrapLogMessage": true,
+            "prettifyJson": false,
+            "enableLogDetails": true,
+            "sortOrder": "Descending",
+            "dedupStrategy": "none"
+          },
           "targets": [
             {
               "refId": "A",
-              "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} [5m]))",
-              "legendFormat": "{{app}}"
+              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} | json | log_level=~\"$level\" | line_format \"{{.log_level}} [{{.app}}] {{.message}}\"",
+              "maxLines": 500
             }
           ]
         },
         {
           "id": 2,
           "type": "timeseries",
+          "title": "Volume par niveau",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+          "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (log_level) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | log_level=~\"$level\" [5m]))",
+              "legendFormat": "{{log_level}}"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
           "title": "Erreurs par service",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-          "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } }, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+          "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             {
               "refId": "A",
@@ -68,17 +107,38 @@ data:
           ]
         },
         {
-          "id": 3,
-          "type": "logs",
-          "title": "Logs récents",
+          "id": 4,
+          "type": "timeseries",
+          "title": "Taux d'erreur par service",
           "datasource": { "type": "loki", "uid": "loki" },
-          "gridPos": { "h": 12, "w": 24, "x": 0, "y": 8 },
-          "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 26 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             {
               "refId": "A",
-              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"}",
-              "maxLines": 500
+              "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | log_level=~\"ERROR|FATAL\" [5m])) / clamp_min(sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json [5m])), 0.0001)",
+              "legendFormat": "{{app}}"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "table",
+          "title": "Top erreurs (par logger)",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 26 },
+          "fieldConfig": {
+            "defaults": { "custom": { "align": "auto" }, "unit": "short" },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "log_logger" }, "properties": [ { "id": "custom.width", "value": 420 } ] }
+            ]
+          },
+          "options": { "showHeader": true, "sortBy": [ { "displayName": "Value", "desc": true } ] },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "topk(10, sum by (log_logger) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | log_level=~\"ERROR|FATAL\" [1h])))",
+              "instant": true
             }
           ]
         }

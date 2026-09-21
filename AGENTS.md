@@ -161,38 +161,24 @@ Les datasources Loki/Tempo et leurs corrélations sont dans `monitoring/grafana-
 ## 7. Reset « base saine » (production)
 
 Le reset complet efface **Postgres + Kafka** (les anciens événements Kafka seraient sinon rejoués
-dans les projections neuves). À faire après avoir déployé le lot auth passwordless.
+dans les projections neuves), puis reconstruit l'infra vierge (7 bases + Kafka vide) et
+resynchronise les applications (Flyway + seeders idempotents). Il est **scripté** (kubectl seul,
+sans CLI `argocd`) :
 
 ```bash
-# 0. Désactiver temporairement l'auto-sync ArgoCD des Applications concernées
-kubectl -n argocd patch app quizup-root --type merge -p '{"spec":{"syncPolicy":null}}'
-for app in quizup-infrastructure quizup-identity quizup-theme quizup-profile \
-           quizup-game quizup-social quizup-matchmaking quizup-leaderboard quizup-gateway; do
-  kubectl -n argocd patch app "$app" --type merge -p '{"spec":{"syncPolicy":null}}'
-done
-
-# 1. Arrêter les apps
-kubectl -n quizup-prod scale deploy --all --replicas=0
-
-# 2. Supprimer les données Postgres + Kafka (PVC local-path)
-kubectl -n quizup-prod delete statefulset postgres kafka
-kubectl -n quizup-prod delete pvc postgres-data-postgres-0 kafka-data-kafka-0
-
-# 3. Re-synchroniser (recrée Postgres -> init des 7 bases ; Kafka vierge ; Flyway + seeders)
-argocd app sync quizup-infrastructure
-for app in quizup-identity quizup-theme quizup-profile quizup-game quizup-social \
-           quizup-matchmaking quizup-leaderboard quizup-gateway; do
-  argocd app sync "$app"
-done
-
-# 4. Réactiver l'auto-sync
-for app in quizup-root quizup-infrastructure quizup-identity quizup-theme quizup-profile \
-           quizup-game quizup-social quizup-matchmaking quizup-leaderboard quizup-gateway; do
-  kubectl -n argocd patch app "$app" --type merge \
-    -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'
-done
+cd devops/quizup-gitops
+./scripts/reset.sh            # demande confirmation
+./scripts/reset.sh --yes      # non interactif (release)
 ```
 
-**Vérifications** : `user_entry` contient le compte système (`password` absent), `profile` a son
-profil, `theme` a 4 sujets publiés, et `c.nadjim@gmail.com` obtient **Admin** dans Grafana.
-Les sessions en base étant purgées, tout le monde doit se reconnecter.
+Déroulé : désactivation de l'auto-sync ArgoCD → arrêt des services → suppression des
+StatefulSets/PVC `postgres`/`kafka` → resync infra (Postgres vierge + init des 7 bases, Kafka
+vide) → attente Postgres/Kafka → resync des services → réactivation de l'auto-sync → vérifications.
+
+**À lancer après avoir déployé le lot** qui change le schéma des follows (ids déterministes) et
+l'idempotence des projections : les volumes neufs rejouent les migrations `V1` (schéma modifié).
+
+**Vérifications** : `user_entry` contient le compte système (sans mot de passe), `profile` a son
+profil, `theme` a 4 sujets publiés, et les compteurs (`topic_entry.followers_counter`) sont nuls
+au départ. Les sessions en base étant purgées, tout le monde doit se reconnecter.
+

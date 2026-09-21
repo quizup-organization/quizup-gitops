@@ -95,6 +95,11 @@ data:
   QUIZUP_GATEWAY_SOCIAL_URL: http://quizup-social.quizup-prod.svc.cluster.local
   QUIZUP_GATEWAY_MATCHMAKING_URL: http://quizup-matchmaking.quizup-prod.svc.cluster.local
   QUIZUP_GATEWAY_LEADERBOARD_URL: http://quizup-leaderboard.quizup-prod.svc.cluster.local
+  # Routes WebSocket (schéma ws:// dédié).
+  QUIZUP_GATEWAY_GAME_WS_URL: ws://quizup-game.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_SOCIAL_WS_URL: ws://quizup-social.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_MATCHMAKING_WS_URL: ws://quizup-matchmaking.quizup-prod.svc.cluster.local
+  QUIZUP_GATEWAY_PROFILE_WS_URL: ws://quizup-profile.quizup-prod.svc.cluster.local
   # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
   MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
   QUIZUP_LOG_LEVEL: INFO

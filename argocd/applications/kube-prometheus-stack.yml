@@ -117,6 +117,10 @@ spec:
               token_url: http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/token
               api_url: http://quizup-identity.quizup-prod.svc.cluster.local/userinfo
               use_pkce: true
+              # Un reset complet de l'IdP régénère les `sub` (userId) pour un même email :
+              # on autorise Grafana à rattacher le compte par email plutôt que de tenter
+              # une création qui échoue (« user not found »).
+              oauth_allow_insecure_email_lookup: true
               role_attribute_path: "contains(roles, 'ROLE_ADMIN') && 'Admin' || 'Viewer'"
               role_attribute_strict: false
           sidecar:

@@ -31,7 +31,9 @@ spec:
               value: prod
           envFrom:
             - configMapRef:
-                name: quizup-service-config
+                name: quizup-common-config
+            - configMapRef:
+                name: quizup-oauth-client-config
             - configMapRef:
                 name: quizup-profile-config
             - secretRef:
@@ -94,11 +96,7 @@ metadata:
   name: quizup-profile-config
   namespace: quizup-prod
 data:
-  QUIZUP_DB_HOST: postgres
-  QUIZUP_DB_PORT: "5432"
   QUIZUP_DB_NAME: quizup_profile
   # URL publique du serveur OpenAPI (acces via le gateway).
   MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/profile-service
-  QUIZUP_DB_USERNAME: quizup
   QUIZUP_SEED_DATA_ENABLED: "true"
-  QUIZUP_LOG_LEVEL: INFO

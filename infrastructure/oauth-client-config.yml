@@ -1,0 +1,15 @@
+# Client OAuth2 M2M `server-client` (client_credentials) requis par le RestTemplate tokenisé
+# du SDK pour interroger les `/command-capabilities` des pairs (bus Axon distribué).
+#
+# Le secret est fourni par chaque service via le secret scellé
+# `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET`.
+# Identity n'inclut PAS ce ConfigMap : il déclare sa propre registration (variable
+# `QUIZUP_IDENTITY_SERVER_CLIENT_SECRET`) dans `quizup-identity-config`.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizup-oauth-client-config
+  namespace: quizup-prod
+data:
+  SPRING_APPLICATION_JSON: >-
+    {"spring":{"security":{"oauth2":{"client":{"registration":{"server-client":{"provider":"quizup-identity","client-id":"server","client-secret":"${SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SERVER_CLIENT_CLIENT_SECRET}","authorization-grant-type":"client_credentials","scope":"openid"}},"provider":{"quizup-identity":{"token-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/token","jwk-set-uri":"http://quizup-identity.quizup-prod.svc.cluster.local/oauth2/jwks"}}}}}}}

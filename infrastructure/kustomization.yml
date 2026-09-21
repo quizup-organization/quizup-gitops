@@ -3,7 +3,8 @@ kind: Kustomization
 namespace: quizup-prod
 resources:
   - configmap.yml
-  - service-common-config.yml
+  - common-config.yml
+  - oauth-client-config.yml
   - postgres-init.yml
   - postgres.yml
   - kafka.yml

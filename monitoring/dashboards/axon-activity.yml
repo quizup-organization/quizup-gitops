@@ -129,24 +129,23 @@ data:
         {
           "id": 10,
           "type": "timeseries",
-          "title": "Requêtes /s (succès / échec)",
+          "title": "Requêtes /s (succès, par requête)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
           "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "sum by (application) (rate(queryBus_successCounter_total{application=~\"$application\"}[5m]))", "legendFormat": "{{application}} succès" },
-            { "refId": "B", "expr": "sum by (application) (rate(queryBus_failureCounter_total{application=~\"$application\"}[5m]))", "legendFormat": "{{application}} échec" }
+            { "refId": "A", "expr": "topk(8, sum by (name) (rate(quizup_axon_queries_total{application=~\"$application\", result=\"success\"}[5m])))", "legendFormat": "{{name}}" }
           ]
         },
         {
           "id": 11,
           "type": "timeseries",
-          "title": "Latence requêtes p95",
+          "title": "Requêtes — taux d'échec (par requête)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
-          "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, application) (rate(queryBus_allTimer_seconds_bucket{application=~\"$application\"}[5m])))", "legendFormat": "{{application}}" }
+            { "refId": "A", "expr": "sum by (name) (rate(quizup_axon_queries_total{application=~\"$application\", result=\"failure\"}[5m])) / clamp_min(sum by (name) (rate(quizup_axon_queries_total{application=~\"$application\"}[5m])), 0.0001)", "legendFormat": "{{name}}" }
           ]
         },
         {
@@ -171,6 +170,17 @@ data:
           "fieldConfig": { "defaults": { "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
           "targets": [
             { "refId": "A", "expr": "sum(quizup_axon_event_processor_error{application=~\"$application\"})" }
+          ]
+        },
+        {
+          "id": 13,
+          "type": "timeseries",
+          "title": "Latence requêtes p95 (par requête)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 49 },
+          "fieldConfig": { "defaults": { "unit": "s", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le, name) (rate(quizup_axon_query_duration_seconds_bucket{application=~\"$application\"}[5m])))", "legendFormat": "{{name}}" }
           ]
         }
       ]

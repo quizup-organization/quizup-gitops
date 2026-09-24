@@ -12,3 +12,4 @@ data:
     CREATE DATABASE quizup_matchmaking OWNER quizup ENCODING 'UTF8';
     CREATE DATABASE quizup_profile OWNER quizup ENCODING 'UTF8';
     CREATE DATABASE quizup_leaderboard OWNER quizup ENCODING 'UTF8';
+    CREATE DATABASE quizup_bff OWNER quizup ENCODING 'UTF8';

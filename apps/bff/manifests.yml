@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quizup-bff
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-bff
+    # Pas de label `app.kubernetes.io/component: axon` : le BFF émet des queries/commands et
+    # consomme Kafka, mais n'est pas un fournisseur — inutile de le rendre découvrable.
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: quizup
+      app: quizup-bff
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: quizup
+        app: quizup-bff
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: quizup-bff
+          image: ghcr.io/quizup-organization/bff:1.1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+          envFrom:
+            - configMapRef:
+                name: quizup-common-config
+            - configMapRef:
+                name: quizup-oauth-client-config
+            - configMapRef:
+                name: quizup-bff-config
+            - secretRef:
+                name: quizup-bff-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 40
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quizup-bff
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-bff
+spec:
+  selector:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-bff
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quizup-bff-config
+  namespace: quizup-prod
+data:
+  QUIZUP_DB_NAME: quizup_bff
+  # URL publique du serveur OpenAPI (BFF = unique façade API).
+  MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr

@@ -135,7 +135,7 @@ seal_all() {
   seal_infra
   seal_ghcr
   seal_identity
-  for svc in theme game social matchmaking profile leaderboard; do
+  for svc in theme game social matchmaking profile leaderboard bff; do
     seal_service "${svc}"
   done
   seal_gateway
@@ -150,9 +150,9 @@ case "${1:-all}" in
   infra) seal_infra ;;
   ghcr-pull) seal_ghcr ;;
   monitoring) seal_monitoring ;;
-  theme|game|social|matchmaking|profile|leaderboard) seal_service "$1" ;;
+  theme|game|social|matchmaking|profile|leaderboard|bff) seal_service "$1" ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|bff|gateway]" >&2
     exit 1
     ;;
 esac

@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: quizup-gateway
+  name: quizup-bff
   namespace: quizup-prod
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -15,10 +15,11 @@ spec:
     - host: api.quizup.cnadjim.fr
       http:
         paths:
+          # Façade REST `/api/**` **et** endpoint STOMP `/ws/**` (Traefik proxifie le WebSocket).
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: quizup-gateway
+                name: quizup-bff
                 port:
                   number: 80

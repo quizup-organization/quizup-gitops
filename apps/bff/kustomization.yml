@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: quizup-prod
 resources:
   - manifests.yml
+  - ingress.yml
   - sealed-secret.yml
 images:
   - name: ghcr.io/quizup-organization/bff

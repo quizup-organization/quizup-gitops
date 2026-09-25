@@ -1,3 +1,0 @@
-kustomize:
-  images:
-  - ghcr.io/quizup-organization/gateway:1.4.11

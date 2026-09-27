@@ -23,13 +23,13 @@ ARGOCD_NS="${ARGOCD_NS:-argocd}"
 APPS=(
   quizup-root quizup-infrastructure
   quizup-identity quizup-theme quizup-profile quizup-game quizup-social
-  quizup-matchmaking quizup-leaderboard quizup-gateway quizup-web
+  quizup-matchmaking quizup-leaderboard quizup-web
 )
 
 # Services à resynchroniser après recréation de l'infra (ordre : dépendances d'abord).
 SERVICES=(
   quizup-identity quizup-theme quizup-profile quizup-game quizup-social
-  quizup-matchmaking quizup-leaderboard quizup-gateway quizup-web
+  quizup-matchmaking quizup-leaderboard quizup-web
 )
 
 DBS=(

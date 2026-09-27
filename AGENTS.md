@@ -105,7 +105,7 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   des virgules obtenant `ROLE_ADMIN` (mappé Admin côté Grafana). Le **compte système unique**
   (`quizup.contacts@gmail.com`) est aussi admin et sert de bot.
 - **Seeding** : `QUIZUP_SEED_DATA_ENABLED=true` pour `identity` (compte système), `profile`
-  (profil système) et `theme` (4 sujets de départ). Seeders idempotents.
+  (profil système) et `theme` (20 sujets de départ, seed YAML auto-réparateur). Seeders idempotents.
 - **Resend** : l'envoi OTP échoue en `403 validation_error` tant que le domaine de `QUIZUP_MAIL_FROM`
   (`quizup.cnadjim.fr`) n'est pas **vérifié dans Resend** (ajouter les enregistrements SPF/DKIM DNS).
   Le endpoint `/api/auth/request-code` renvoie quand même `202` (anti-énumération) : vérifier les
@@ -171,14 +171,25 @@ cd devops/quizup-gitops
 ./scripts/reset.sh --yes      # non interactif (release)
 ```
 
+**Exécution prod** : le kubeconfig k3s est sur `pi-node1` (SSH `pi@176.144.234.135 -p 2222`).
+Le script ne dépend d'aucun fichier local (kubectl uniquement) et peut être exécuté à distance :
+
+```bash
+ssh -p 2222 pi@176.144.234.135 'bash -s -- --yes' < scripts/reset.sh
+```
+
 Déroulé : désactivation de l'auto-sync ArgoCD → arrêt des services → suppression des
 StatefulSets/PVC `postgres`/`kafka` → resync infra (Postgres vierge + init des 7 bases, Kafka
 vide) → attente Postgres/Kafka → resync des services → réactivation de l'auto-sync → vérifications.
 
-**À lancer après avoir déployé le lot** qui change le schéma des follows (ids déterministes) et
-l'idempotence des projections : les volumes neufs rejouent les migrations `V1` (schéma modifié).
+**À lancer avec le rollout du lot** qui change un schéma `V1` (les volumes neufs rejouent les
+migrations) : ex. le lot seed YAML + `topic_entry.image_url` (`theme` ≥ 2.2.0). Le reset doit
+coïncider avec le déploiement du nouveau tag, sinon Flyway détecte un checksum différent et le pod
+part en `CrashLoopBackOff`. Si le tag est déjà dans les manifests (ArgoCD Image Updater), couper
+l'auto-sync des apps `quizup-*` avant le rollout, puis lancer le reset (il la réactive en fin de
+script) — ou lancer le reset immédiatement après le rollout.
 
 **Vérifications** : `user_entry` contient le compte système (sans mot de passe), `profile` a son
-profil, `theme` a 4 sujets publiés, et les compteurs (`topic_entry.followers_counter`) sont nuls
+profil, `theme` a 20 sujets publiés, et les compteurs (`topic_entry.followers_counter`) sont nuls
 au départ. Les sessions en base étant purgées, tout le monde doit se reconnecter.
 

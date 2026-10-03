@@ -56,6 +56,7 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 | `apps/matchmaking` | `quizup-matchmaking`| `ghcr.io/quizup-organization/matchmaking` | —                            |
 | `apps/profile`     | `quizup-profile`    | `ghcr.io/quizup-organization/profile`     | —                            |
 | `apps/leaderboard` | `quizup-leaderboard`| `ghcr.io/quizup-organization/leaderboard` | —                            |
+| `apps/notification`| `quizup-notification`| `ghcr.io/quizup-organization/notification` | —                          |
 | `apps/quizup-web`  | `quizup-web`        | `ghcr.io/quizup-organization/quizup-web`  | `app.quizup.cnadjim.fr`      |
 
 ---

@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: quizup-notification
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: notification=ghcr.io/quizup-organization/notification
+    argocd-image-updater.argoproj.io/notification.update-strategy: semver
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: main
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/quizup-organization/quizup-gitops.git
+    targetRevision: main
+    path: apps/notification
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: quizup-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

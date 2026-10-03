@@ -41,9 +41,11 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 192Mi
+              memory: 256Mi
             limits:
-              memory: 512Mi
+              # Tempo atteint ~510 Mi au démarrage (ballast 128 Mi + replay WAL + blocs locaux) :
+              # une limite à 512 Mi provoque un OOM-kill en boucle.
+              memory: 1Gi
 
         persistence:
           enabled: true

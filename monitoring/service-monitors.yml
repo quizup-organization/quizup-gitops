@@ -16,6 +16,12 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/part-of: quizup
+    # `quizup-web` est un nginx statique (pas d'actuator) : exclu du scrape Prometheus.
+    matchExpressions:
+      - key: app
+        operator: NotIn
+        values:
+          - quizup-web
   endpoints:
     - port: http
       path: /actuator/prometheus

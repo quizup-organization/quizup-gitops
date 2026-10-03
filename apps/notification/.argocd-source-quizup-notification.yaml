@@ -1,0 +1,3 @@
+kustomize:
+  images:
+  - ghcr.io/quizup-organization/notification:1.0.1

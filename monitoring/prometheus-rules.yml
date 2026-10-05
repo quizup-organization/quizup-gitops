@@ -139,6 +139,28 @@ spec:
             summary: "Heap JVM saturé : {{ $labels.application }}"
             description: "Le tas utilisé dépasse 90% du max alloué depuis 10 min."
 
+    - name: quizup.axon
+      rules:
+        - alert: QuizupAxonEventProcessorErrors
+          expr: max by (application, processor) (quizup_axon_event_processor_error{application=~"quizup-.*"}) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Processeur Axon en erreur : {{ $labels.application }}"
+            description: "Un processeur d'événements reste en erreur depuis 5 min (risque de poison pill / token bloqué) : {{ $labels.processor }}."
+        - alert: QuizupAxonEventProcessingFailures
+          expr: |
+            sum by (application, processor) (
+              rate(quizup_axon_events_processed_total{application=~"quizup-.*", result="failure"}[10m])
+            ) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Échecs répétés d'événements Axon : {{ $labels.application }}"
+            description: "Des événements échouent en boucle sur {{ $labels.processor }} (vérifier logs + token)."
+
     - name: quizup.platform
       rules:
         - alert: PostgresDown

@@ -118,6 +118,12 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   (`quizup.cnadjim.fr`) n'est pas **vérifié dans Resend** (ajouter les enregistrements SPF/DKIM DNS).
   Le endpoint `/api/auth/request-code` renvoie quand même `202` (anti-énumération) : vérifier les
   logs identity (`Failed to send login code`).
+- **Processeurs Axon (poison pill)** : un événement qui échoue en boucle (ex. recréation d'agrégat
+  après relecture) bloque **silencieusement** tout l'ingest d'un service — le read model ne bouge
+  plus alors que le service est `Ready`. Garde-fous : règles `quizup.axon`
+  (`QuizupAxonEventProcessorErrors`, `QuizupAxonEventProcessingFailures`) dans
+  `monitoring/prometheus-rules.yml`, dashboard `axon-activity`. En cas d'alerte : vérifier
+  `EventProcessor[<group>]` dans les logs du service et le token (`token_entry`).
 
 ---
 

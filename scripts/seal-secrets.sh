@@ -75,6 +75,13 @@ seal_gateway() {
     "$(server_client_secret)"
 }
 
+# Secret additionnel du BFF : clé privée VAPID (Web Push). Séparé du secret principal pour ne
+# pas avoir à le resceller en entier ; la clé publique va dans le ConfigMap `quizup-bff-config`.
+seal_bff_push() {
+  seal_generic quizup-prod quizup-bff-push apps/bff/push-sealed-secret.yml \
+    --from-literal=QUIZUP_PUSH_VAPID_PRIVATE_KEY="${QUIZUP_PUSH_VAPID_PRIVATE_KEY:?QUIZUP_PUSH_VAPID_PRIVATE_KEY manquant}"
+}
+
 # Secret principal d'identity. Le client OAuth2 Google (login social) est REQUIS :
 # sans `QUIZUP_OAUTH2_GOOGLE_SECRET`, le client-secret reste le placeholder littéral
 # `${QUIZUP_OAUTH2_GOOGLE_SECRET}` et Google refuse l'échange de token.
@@ -138,6 +145,7 @@ seal_all() {
   for svc in theme game social matchmaking profile leaderboard notification bff; do
     seal_service "${svc}"
   done
+  seal_bff_push
   seal_gateway
 }
 
@@ -151,8 +159,9 @@ case "${1:-all}" in
   ghcr-pull) seal_ghcr ;;
   monitoring) seal_monitoring ;;
   theme|game|social|matchmaking|profile|leaderboard|notification|bff) seal_service "$1" ;;
+  bff-push) seal_bff_push ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|notification|bff|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|notification|bff|bff-push|gateway]" >&2
     exit 1
     ;;
 esac

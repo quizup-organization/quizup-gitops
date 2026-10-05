@@ -38,6 +38,9 @@ spec:
                 name: quizup-bff-config
             - secretRef:
                 name: quizup-bff-secret
+            # Clé privée VAPID (Web Push) — secret dédié, rescellable indépendamment.
+            - secretRef:
+                name: quizup-bff-push
           resources:
             requests:
               cpu: 100m
@@ -97,3 +100,7 @@ data:
   QUIZUP_DB_NAME: quizup_bff
   # URL publique du serveur OpenAPI (BFF = unique façade API).
   MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr
+  # Web Push : clé publique VAPID (paire dont la privée est scellée dans quizup-bff-push).
+  # La paire doit rester stable à vie ; une rotation invalide les abonnements navigateur.
+  QUIZUP_PUSH_VAPID_PUBLIC_KEY: BM94efD-XzDsNN1Q7QpDue7uusKvRZ2Loh7gIOCNWAHnD9v-HRgB5BOOIhShy3m-1_E45wiP5Yy7cyV8Nrr2KRc
+  QUIZUP_PUSH_VAPID_SUBJECT: mailto:admin@quizup.cnadjim.fr

@@ -99,6 +99,13 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   (RBAC restreint à ce namespace) ; `write-back-method: git`, `git-branch: main`.
 - **`leaderboard`** nécessite son `application-prod.yml` (datasource/kafka/jwt) comme les autres.
 - **Frontend** : les variables Vite sont **inlinées au build** (voir `web/.github/workflows/release.yml`).
+- **Web Push (BFF)** : la paire **VAPID** doit rester stable à vie (une rotation invalide tous les
+  abonnements navigateur → purger `push_subscription` et faire re-souscrire). La clé publique +
+  le subject vont dans le ConfigMap `quizup-bff-config`, la privée dans le SealedSecret dédié
+  `quizup-bff-push` (`QUIZUP_PUSH_VAPID_PRIVATE_KEY`, requis par `seal-secrets.sh bff-push`).
+  Sans clés, le push est désactivé silencieusement (le STOMP reste la voie nominale).
+  Génération : `npx web-push generate-vapid-keys`, puis
+  `QUIZUP_PUSH_VAPID_PRIVATE_KEY=… ./scripts/seal-secrets.sh bff-push`.
 - **Emails OTP** : les codes de connexion sont envoyés via **Resend**. `QUIZUP_MAIL_API_KEY` est
   portée par le secret `quizup-identity-secret` (resceller avec `QUIZUP_MAIL_API_KEY=… ./scripts/seal-secrets.sh identity`).
   `QUIZUP_MAIL_FROM` / `QUIZUP_MAIL_BASE_URL` sont dans le ConfigMap identity.

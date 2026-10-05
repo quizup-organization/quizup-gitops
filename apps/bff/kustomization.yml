@@ -5,6 +5,7 @@ resources:
   - manifests.yml
   - ingress.yml
   - sealed-secret.yml
+  - push-sealed-secret.yml
 images:
   - name: ghcr.io/quizup-organization/bff
     newTag: "1.1.0"

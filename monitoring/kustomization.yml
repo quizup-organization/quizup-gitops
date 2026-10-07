@@ -9,6 +9,7 @@ resources:
   - alertmanager-config.yml
   - kafka-exporter.yml
   - postgres-exporter.yml
+  - redis-exporter.yml
   - dashboards/quizup-overview.yml
   - dashboards/pi-node.yml
   - dashboards/logs.yml

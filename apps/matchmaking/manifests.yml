@@ -99,3 +99,6 @@ data:
   QUIZUP_DB_NAME: quizup_matchmaking
   # URL publique du serveur OpenAPI (acces via le gateway).
   MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/matchmaking-service
+  # Session tier : file d'appariement, salons et timers dans Redis (TTL naturels).
+  QUIZUP_REDIS_HOST: redis
+  QUIZUP_REDIS_PORT: "6379"

@@ -195,6 +195,30 @@ spec:
           annotations:
             summary: "Lag Kafka élevé : {{ $labels.consumergroup }}"
             description: "Le consumer group {{ $labels.consumergroup }} accuse un lag > 1000 depuis 10 min."
+        - alert: RedisDown
+          expr: up{job="redis-exporter"} == 0 or redis_up == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Redis injoignable"
+            description: "redis_exporter ne peut plus joindre le store de sessions depuis 2 min (matchmaking/lobby/présence dégradés)."
+        - alert: RedisMemoryHigh
+          expr: redis_memory_max_bytes > 0 and redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Mémoire Redis > 85%"
+            description: "Le store de sessions approche de maxmemory (noeviction : les écritures échoueront, purger les clés mortes ou augmenter la limite)."
+        - alert: RedisEvictedKeys
+          expr: increase(redis_evicted_keys_total[10m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Évictions Redis détectées"
+            description: "Des clés ont été évincées alors que la politique doit rester noeviction (vérifier la config de l'instance)."
         - alert: QuizupPublicEndpointDown
           expr: probe_success{job="blackbox-quizup"} == 0
           for: 3m

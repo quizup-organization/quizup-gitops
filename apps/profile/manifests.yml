@@ -100,6 +100,3 @@ data:
   # URL publique du serveur OpenAPI (acces via le gateway).
   MICROSERVICE_SWAGGER_SERVER_URL: https://api.quizup.cnadjim.fr/profile-service
   QUIZUP_SEED_DATA_ENABLED: "true"
-  # Présence : état chaud (leases TTL) dans Redis, projection durable en base.
-  QUIZUP_REDIS_HOST: redis
-  QUIZUP_REDIS_PORT: "6379"

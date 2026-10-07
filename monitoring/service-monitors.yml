@@ -69,23 +69,3 @@ spec:
   endpoints:
     - port: metrics
       interval: 30s
----
-# Exporter Redis (déployé dans quizup-prod, à côté du store de sessions).
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: redis-exporter
-  namespace: quizup-prod
-  labels:
-    app.kubernetes.io/part-of: quizup
-spec:
-  jobLabel: app
-  selector:
-    matchLabels:
-      app: redis-exporter
-  namespaceSelector:
-    matchNames:
-      - quizup-prod
-  endpoints:
-    - port: metrics
-      interval: 30s

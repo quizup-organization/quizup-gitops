@@ -138,6 +138,14 @@ spec:
           annotations:
             summary: "Heap JVM saturé : {{ $labels.application }}"
             description: "Le tas utilisé dépasse 90% du max alloué depuis 10 min."
+        - alert: QuizupThemeSeedFailures
+          expr: quizup_theme_seed_topics_total{application="quizup-theme", outcome="failed"} > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Seed de thèmes en échec : {{ $labels.application }}"
+            description: "Au moins un thème a échoué au seeding (reste DRAFT/incomplet, invisible au catalogue). Vérifier les logs DataSeeder puis recréer le pod quizup-theme pour relancer la réparation."
 
     - name: quizup.axon
       rules:

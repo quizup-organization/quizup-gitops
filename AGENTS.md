@@ -113,7 +113,11 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   des virgules obtenant `ROLE_ADMIN` (mappé Admin côté Grafana). Le **compte système unique**
   (`quizup.contacts@gmail.com`) est aussi admin et sert de bot.
 - **Seeding** : `QUIZUP_SEED_DATA_ENABLED=true` pour `identity` (compte système), `profile`
-  (profil système) et `theme` (20 sujets de départ, seed YAML auto-réparateur). Seeders idempotents.
+  (profil système) et `theme` (25 sujets de départ, seed YAML auto-réparateur). Seeders idempotents.
+  Le seeder `theme` retente les échecs transitoires (instance Axon périmée pendant un rollout :
+  jusqu'à 4 tentatives, backoff 2s×n) et expose `quizup_theme_seed_topics_total{outcome="failed"}`
+  → alerte `QuizupThemeSeedFailures` ; un thème laissé `DRAFT` se répare au prochain redémarrage
+  du pod (`kubectl delete pod` — pas de `rollout restart`, ArgoCD self-heal annulerait l'annotation).
 - **Resend** : l'envoi OTP échoue en `403 validation_error` tant que le domaine de `QUIZUP_MAIL_FROM`
   (`quizup.cnadjim.fr`) n'est pas **vérifié dans Resend** (ajouter les enregistrements SPF/DKIM DNS).
   Le endpoint `/api/auth/request-code` renvoie quand même `202` (anti-énumération) : vérifier les

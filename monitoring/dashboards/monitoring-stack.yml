@@ -60,7 +60,7 @@ data:
         {
           "id": 4,
           "type": "timeseries",
-          "title": "Prometheus — séries et taille TSDB",
+          "title": "Prometheus — séries en tête",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
           "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },

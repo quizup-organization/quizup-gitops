@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-monitoring-stack
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: quizup
+data:
+  monitoring-stack.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "1m",
+      "schemaVersion": 39,
+      "tags": ["quizup", "monitoring", "storage"],
+      "title": "QuizUp — Monitoring",
+      "uid": "quizup-monitoring",
+      "version": 1,
+      "time": { "from": "now-7d", "to": "now" },
+      "timezone": "browser",
+      "templating": { "list": [] },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "PVC monitoring — % utilisé (rétention 7j)",
+          "description": "Saturation des volumes Prometheus/Loki/Tempo/Grafana/Alertmanager.",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "(kubelet_volume_stats_used_bytes{namespace=\"monitoring\"} / kubelet_volume_stats_capacity_bytes{namespace=\"monitoring\"}) * 100", "legendFormat": "{{persistentvolumeclaim}}" }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "timeseries",
+          "title": "PVC monitoring — espace libre",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "decbytes", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "kubelet_volume_stats_available_bytes{namespace=\"monitoring\"}", "legendFormat": "{{persistentvolumeclaim}}" }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "Cibles Prometheus DOWN",
+          "description": "0 attendu. Toute valeur non nulle = cible injoignable.",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "up{namespace=~\"monitoring|quizup-prod\"} == 0", "legendFormat": "{{job}} {{instance}}" }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Prometheus — séries et taille TSDB",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "prometheus_tsdb_head_series", "legendFormat": "séries en tête" }
+          ]
+        },
+        {
+          "id": 5,
+          "type": "timeseries",
+          "title": "Loki / Tempo — disponibilité",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "up{job=~\"loki.*|tempo.*\"}", "legendFormat": "{{job}}" }
+          ]
+        },
+        {
+          "id": 6,
+          "type": "stat",
+          "title": "Rétention cible",
+          "description": "Fenêtre roulante : 7 jours pour métriques, logs et traces.",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "fieldConfig": { "defaults": { "unit": "s", "decimals": 0 }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "auto" },
+          "targets": [
+            { "refId": "A", "expr": "168 * 3600", "legendFormat": "rétention (s)" }
+          ]
+        }
+      ]
+    }

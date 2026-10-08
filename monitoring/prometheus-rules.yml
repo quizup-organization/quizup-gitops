@@ -211,3 +211,52 @@ spec:
           annotations:
             summary: "Certificat TLS bientôt expiré : {{ $labels.instance }}"
             description: "Le certificat expire dans moins de 14 jours."
+
+    - name: quizup.monitoring
+      rules:
+        # Les PVC monitoring (Prometheus/Loki/Tempo/Grafana/Alertmanager, local-path) portent la
+        # rétention 7j : s'ils saturent, les stores tronquent plus tôt ou le pod crashe.
+        - alert: KubePersistentVolumeFillingUp
+          expr: |
+            (
+              kubelet_volume_stats_used_bytes{namespace="monitoring"}
+              /
+              kubelet_volume_stats_capacity_bytes{namespace="monitoring"}
+            ) > 0.85
+            and
+            (
+              kubelet_volume_stats_used_bytes{namespace="monitoring"}
+              /
+              kubelet_volume_stats_capacity_bytes{namespace="monitoring"}
+            ) < 0.99
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVC monitoring presque plein : {{ $labels.persistentvolumeclaim }}"
+            description: "{{ $value | humanizePercentage }} utilisé depuis 15 min (namespace {{ $labels.namespace }})."
+        - alert: KubePersistentVolumeFull
+          expr: |
+            (
+              kubelet_volume_stats_used_bytes{namespace="monitoring"}
+              /
+              kubelet_volume_stats_capacity_bytes{namespace="monitoring"}
+            ) > 0.99
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PVC monitoring saturé : {{ $labels.persistentvolumeclaim }}"
+            description: "Volume plein (> 99%) : risque de crash du store (Prometheus TSDB / ingester Loki)."
+        - alert: KubePersistentVolumeFullInFourDays
+          expr: |
+            predict_linear(
+              kubelet_volume_stats_available_bytes{namespace="monitoring"}[6h],
+              4 * 24 * 3600
+            ) < 0
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: "PVC monitoring saturé sous 4 jours : {{ $labels.persistentvolumeclaim }}"
+            description: "Projection linéaire (6h) → volume plein sous 4 jours (namespace {{ $labels.namespace }})."

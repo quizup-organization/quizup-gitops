@@ -31,8 +31,8 @@ spec:
 
         prometheus:
           prometheusSpec:
-            retention: 15d
-            retentionSize: 6GB
+            retention: 7d
+            retentionSize: 4GB
             scrapeInterval: 30s
             # Les ServiceMonitor/PodMonitor/Probe/PrometheusRule sont découverts dans TOUS
             # les namespaces : les services QuizUp vivent dans `quizup-prod`.

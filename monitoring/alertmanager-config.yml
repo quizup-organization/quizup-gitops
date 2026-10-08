@@ -32,3 +32,25 @@ spec:
             {{ .Annotations.summary }}
             {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
             {{ end }}
+  # Réduction du bruit : un critical masque le warning de même cause ; un NodeDown masque les
+  # alertes node-exporter dérivées (température, throttling, mémoire, disque) du même nœud.
+  inhibitRules:
+    - sourceMatch:
+        - name: severity
+          value: critical
+          matchType: "="
+      targetMatch:
+        - name: severity
+          value: warning
+          matchType: "="
+      equal:
+        - alertname
+        - namespace
+    - sourceMatch:
+        - name: alertname
+          value: NodeDown
+          matchType: "="
+      targetMatch:
+        - name: alertname
+          value: "Node.*"
+          matchType: "=~"

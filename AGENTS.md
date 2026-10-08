@@ -138,9 +138,9 @@ Stack auto-hébergée dans le namespace **`monitoring`**, déployée par ArgoCD 
 | Application (wave)                 | Source                             | Rôle |
 |------------------------------------|------------------------------------|------|
 | `monitoring-secrets` (0)           | `monitoring/secrets/`              | SealedSecrets Grafana admin/OIDC + Telegram |
-| `kube-prometheus-stack` (1)        | Helm `prometheus-community`        | Prometheus (15j, 8Gi), Alertmanager (1Gi), Grafana (2Gi), node-exporter, KSM |
+| `kube-prometheus-stack` (1)        | Helm `prometheus-community`        | Prometheus (7j, 8Gi), Alertmanager (1Gi), Grafana (2Gi), node-exporter, KSM |
 | `prometheus-blackbox-exporter` (1) | Helm `prometheus-community`        | Sondes HTTP/TLS des endpoints publics |
-| `loki` (1)                         | Helm `grafana` (`loki` 7.3.0)      | Stockage des logs (SingleBinary, filesystem, 14j, PVC 10Gi) |
+| `loki` (1)                         | Helm `grafana` (`loki` 7.3.0)      | Stockage des logs (SingleBinary, filesystem, 7j, PVC 10Gi) |
 | `tempo` (1)                        | Helm `grafana` (`tempo` 1.24.3)    | Stockage des traces (OTLP, 7j, PVC 5Gi) |
 | `otel-collector` (1)               | Helm `open-telemetry`              | Collecteur OTLP → Tempo |
 | `alloy` (2)                        | Helm `grafana` (`alloy` 1.12.1)    | DaemonSet de collecte des logs (`/var/log/pods`) → Loki |

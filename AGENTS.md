@@ -113,7 +113,7 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   des virgules obtenant `ROLE_ADMIN` (mappé Admin côté Grafana). Le **compte système unique**
   (`quizup.contacts@gmail.com`) est aussi admin et sert de bot.
 - **Seeding** : `QUIZUP_SEED_DATA_ENABLED=true` pour `identity` (compte système), `profile`
-  (profil système) et `theme` (25 sujets de départ, seed YAML auto-réparateur). Seeders idempotents.
+  (profil système) et `theme` (35 sujets de départ, seed YAML auto-réparateur). Seeders idempotents.
   Le seeder `theme` retente les échecs transitoires (instance Axon périmée pendant un rollout :
   jusqu'à 4 tentatives, backoff 2s×n) et expose `quizup_theme_seed_topics_total{outcome="failed"}`
   → alerte `QuizupThemeSeedFailures` ; un thème laissé `DRAFT` se répare au prochain redémarrage
@@ -179,7 +179,7 @@ Les datasources Loki/Tempo et leurs corrélations sont dans `monitoring/grafana-
 ## 7. Reset « base saine » (production)
 
 Le reset complet efface **Postgres + Kafka** (les anciens événements Kafka seraient sinon rejoués
-dans les projections neuves), puis reconstruit l'infra vierge (7 bases + Kafka vide) et
+dans les projections neuves), puis reconstruit l'infra vierge (8 bases + Kafka vide) et
 resynchronise les applications (Flyway + seeders idempotents). Il est **scripté** (kubectl seul,
 sans CLI `argocd`) :
 
@@ -197,7 +197,7 @@ ssh -p 2222 pi@176.144.234.135 'bash -s -- --yes' < scripts/reset.sh
 ```
 
 Déroulé : désactivation de l'auto-sync ArgoCD → arrêt des services → suppression des
-StatefulSets/PVC `postgres`/`kafka` → resync infra (Postgres vierge + init des 7 bases, Kafka
+StatefulSets/PVC `postgres`/`kafka` → resync infra (Postgres vierge + init des 8 bases, Kafka
 vide) → attente Postgres/Kafka → resync des services → réactivation de l'auto-sync → vérifications.
 
 **À lancer avec le rollout du lot** qui change un schéma `V1` (les volumes neufs rejouent les
@@ -208,6 +208,6 @@ l'auto-sync des apps `quizup-*` avant le rollout, puis lancer le reset (il la r�
 script) — ou lancer le reset immédiatement après le rollout.
 
 **Vérifications** : `user_entry` contient le compte système (sans mot de passe), `profile` a son
-profil, `theme` a 20 sujets publiés, et les compteurs (`topic_entry.followers_counter`) sont nuls
+profil, `theme` a 35 sujets publiés, et les compteurs (`topic_entry.followers_counter`) sont nuls
 au départ. Les sessions en base étant purgées, tout le monde doit se reconnecter.
 

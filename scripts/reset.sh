@@ -96,7 +96,7 @@ kubectl -n "${QUIZUP_NS}" delete pvc postgres-data-postgres-0 kafka-data-kafka-0
 kubectl -n "${QUIZUP_NS}" delete pvc -l app=postgres --ignore-not-found
 kubectl -n "${QUIZUP_NS}" delete pvc -l app=kafka --ignore-not-found
 
-log "4/8 Recréation de l'infra (Postgres vierge + 7 bases, Kafka vide)"
+log "4/8 Recréation de l'infra (Postgres vierge + 8 bases, Kafka vide)"
 argocd_sync quizup-infrastructure
 wait_synced quizup-infrastructure 300 || true
 

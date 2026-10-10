@@ -16,8 +16,14 @@ spec:
     helm:
       releaseName: kube-prometheus-stack
       values: |
+        # CRDs non gérés par ArgoCD : les CRD prometheus-operator pèsent > 1 Mo et
+        # l'apply ArgoCD (client-side, pas de SSA pour les CRDs) échoue sur la limite
+        # d'annotation 256 Ko. Ils sont installés hors chart (et conservés à la purge :
+        # pas de tracking ArgoCD) — lors d'un bump de chart, les appliquer manuellement :
+        #   helm show crds prometheus-community/kube-prometheus-stack --version <v> \
+        #     | kubectl apply --server-side -f -
         crds:
-          enabled: true
+          enabled: false
 
         # k3s : les composants control-plane ne sont pas exposés séparément (targets DOWN sinon).
         kubeEtcd:

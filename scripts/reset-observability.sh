@@ -50,7 +50,9 @@ patch_app() {
 
 autosync_off() { patch_app "$1" '{"spec":{"syncPolicy":null}}'; }
 autosync_on()  { patch_app "$1" '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}'; }
-argocd_sync()  { patch_app "$1" '{"operation":{"initiatedBy":{"username":"reset-observability.sh"},"sync":{"revision":"main","prune":true}}}'; }
+# Pas de `revision` forcée : les apps Helm sont pinnées par version de chart
+# (ex. kube-prometheus-stack 91.4.1) — `main` casserait leur comparaison.
+argocd_sync()  { patch_app "$1" '{"operation":{"initiatedBy":{"username":"reset-observability.sh"},"sync":{"prune":true}}}'; }
 
 wait_synced() {
   local app="$1" timeout="${2:-600}" i phase

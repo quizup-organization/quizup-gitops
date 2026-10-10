@@ -211,3 +211,20 @@ script) — ou lancer le reset immédiatement après le rollout.
 profil, `theme` a 35 sujets publiés, et les compteurs (`topic_entry.followers_counter`) sont nuls
 au départ. Les sessions en base étant purgées, tout le monde doit se reconnecter.
 
+
+### Lot Room / game (game 8.0.0 · matchmaking 6.0.0 · notification 3.0.0 · bff 7.0.0 · web 2.0.0)
+
+Migrations `V1` **réécrites** (matchmaking : `room_entry` ; notification : plus de table de
+routage), groupes Axon renommés (`lobby-saga|lobby-projection|lobby-notification` →
+`room-saga|room-projection|room-notification`) et payloads d'événements renommés
+(`LobbyEvent` → `RoomEvent`). Le reset est **obligatoire** (Kafka vidé, sinon relecture
+`earliest` d'anciens payloads → poison pill) et doit coïncider avec le rollout des nouveaux tags
+(déjà write-back par Image Updater) — sinon Flyway détecte un checksum `V1` différent et
+matchmaking/notification partent en `CrashLoopBackOff`.
+
+```bash
+cd devops/quizup-gitops
+./scripts/reset.sh --yes            # localement, kubeconfig du cluster
+# ou à distance (kubeconfig sur pi-node1) :
+ssh -p 2222 pi@176.144.234.135 'bash -s -- --yes' < scripts/reset.sh
+```

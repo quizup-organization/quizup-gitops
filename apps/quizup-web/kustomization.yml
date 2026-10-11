@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: quizup-prod
 resources:
   - manifests.yml
+  - autoscaling.yml
   - ingress.yml
 images:
   - name: ghcr.io/quizup-organization/quizup-web

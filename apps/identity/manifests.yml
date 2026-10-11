@@ -8,8 +8,9 @@ metadata:
     app.kubernetes.io/component: axon
     app: quizup-identity
 spec:
-  # 1 réplique : le scaling nécessite un `QUIZUP_IDENTITY_JWK` partagé (clés de signature JWT identiques).
-  replicas: 1
+  # Réplicas pilotés par le HPA (apps/identity/autoscaling.yml) — ne pas fixer `replicas` ici.
+  # Multi-réplique sûr : `QUIZUP_IDENTITY_JWK` est partagé (sealed secret commun, clés de
+  # signature identiques) et les sessions/codes/tokens OIDC vivent en JDBC partagé.
   selector:
     matchLabels:
       app.kubernetes.io/part-of: quizup
@@ -23,6 +24,14 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-pull
+      # Répartit les réplicas sur les 2 nœuds (soft : un nœud seul reste schedulable).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: quizup-identity
       containers:
         - name: quizup-identity
           image: ghcr.io/quizup-organization/identity:1.0.0

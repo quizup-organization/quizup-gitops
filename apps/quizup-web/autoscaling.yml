@@ -1,0 +1,40 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: quizup-web
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-web
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: quizup-web
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      # Nginx statique : pas de connexion persistante, un scale-down doux suffit.
+      stabilizationWindowSeconds: 300
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: quizup-web
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-web
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: quizup-web

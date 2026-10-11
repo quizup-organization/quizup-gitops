@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/part-of: quizup
     app: quizup-web
 spec:
-  replicas: 1
+  # Réplicas pilotés par le HPA (apps/quizup-web/autoscaling.yml) — ne pas fixer `replicas` ici.
   selector:
     matchLabels:
       app: quizup-web
@@ -19,13 +19,22 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-pull
+      # Répartit les réplicas sur les 2 nœuds (soft : un nœud seul reste schedulable).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: quizup-web
       containers:
         - name: quizup-web
           image: ghcr.io/quizup-organization/quizup-web:1.0.0
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              cpu: 10m
+              # Request relevée : base de calcul du HPA (10m rendait l'utilisation CPU instable).
+              cpu: 50m
               memory: 32Mi
             limits:
               cpu: "1"

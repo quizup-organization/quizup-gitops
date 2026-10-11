@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: quizup-prod
 resources:
   - manifests.yml
+  - autoscaling.yml
   - ingress.yml
   - sealed-secret.yml
   - grafana-sealed-secret.yml

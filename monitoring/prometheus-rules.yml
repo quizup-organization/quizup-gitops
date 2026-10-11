@@ -180,6 +180,15 @@ spec:
           annotations:
             summary: "Nouvel utilisateur inscrit sur QuizUp"
             description: "{{ $value }} inscription(s) détectée(s) sur les 5 dernières minutes."
+        - alert: QuizupUserLoggedIn
+          expr: |
+            increase(quizup_axon_events_published_total{
+              application="quizup-identity", name="UserLoggedInEvent"}[5m]) > 0
+          labels:
+            severity: info
+          annotations:
+            summary: "Nouvelle connexion à QuizUp"
+            description: "{{ $value }} connexion(s) détectée(s) sur les 5 dernières minutes."
 
     - name: quizup.platform
       rules:

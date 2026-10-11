@@ -27,7 +27,7 @@ data:
           "type": "stat",
           "title": "Inscriptions (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 2, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -37,9 +37,21 @@ data:
         {
           "id": 2,
           "type": "stat",
+          "title": "Connexions (période)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-identity\", name=\"UserLoggedInEvent\"}[$__range]))", "instant": true }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "stat",
           "title": "Parties créées (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 6, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -47,11 +59,11 @@ data:
           ]
         },
         {
-          "id": 3,
+          "id": 4,
           "type": "stat",
           "title": "Parties terminées (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 10, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -59,11 +71,11 @@ data:
           ]
         },
         {
-          "id": 4,
+          "id": 5,
           "type": "stat",
           "title": "Défis créés (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 14, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -71,11 +83,11 @@ data:
           ]
         },
         {
-          "id": 5,
+          "id": 6,
           "type": "stat",
           "title": "Défis acceptés (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 18, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -83,11 +95,11 @@ data:
           ]
         },
         {
-          "id": 6,
+          "id": 7,
           "type": "timeseries",
           "title": "Inscriptions par jour",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 4 },
+          "gridPos": { "h": 8, "w": 6, "x": 0, "y": 4 },
           "interval": "1d",
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
@@ -95,11 +107,23 @@ data:
           ]
         },
         {
-          "id": 7,
+          "id": 8,
+          "type": "timeseries",
+          "title": "Connexions par jour",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 6, "x": 6, "y": 4 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-identity\", name=\"UserLoggedInEvent\"}[$__interval]))", "legendFormat": "connexions" }
+          ]
+        },
+        {
+          "id": 9,
           "type": "timeseries",
           "title": "Parties créées / terminées par jour",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 4 },
+          "gridPos": { "h": 8, "w": 6, "x": 12, "y": 4 },
           "interval": "1d",
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
@@ -108,11 +132,11 @@ data:
           ]
         },
         {
-          "id": 8,
+          "id": 10,
           "type": "timeseries",
           "title": "Défis créés / acceptés par jour",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
+          "gridPos": { "h": 8, "w": 6, "x": 18, "y": 4 },
           "interval": "1d",
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [

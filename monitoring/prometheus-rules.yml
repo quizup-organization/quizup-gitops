@@ -200,6 +200,15 @@ spec:
           annotations:
             summary: "Postgres injoignable"
             description: "postgres_exporter ne peut plus joindre la base depuis 2 min."
+        - alert: PostgresConnectionsHigh
+          # max_connections=150 (args du StatefulSet) : alerte à 80 % pour anticiper la saturation.
+          expr: sum(pg_stat_activity_count) > 120
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Postgres proche de la saturation de connexions"
+            description: "{{ $value }} connexions actives (> 120/150) depuis 5 min — augmenter max_connections ou réduire les pools Hikari."
         - alert: KafkaDown
           expr: up{job="kafka-exporter"} == 0 or kafka_brokers < 1
           for: 2m

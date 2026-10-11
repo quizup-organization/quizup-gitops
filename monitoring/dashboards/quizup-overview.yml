@@ -123,6 +123,28 @@ data:
           "targets": [
             { "refId": "A", "expr": "sum by (application) (jvm_memory_used_bytes{application=~\"$application\", area=\"heap\"}) / sum by (application) (jvm_memory_max_bytes{application=~\"$application\", area=\"heap\"})", "legendFormat": "{{application}}" }
           ]
+        },
+        {
+          "id": 9,
+          "type": "timeseries",
+          "title": "Handshakes WebSocket /s (BFF)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+          "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{application=\"quizup-bff\", uri=~\"/(ws|ws/.*)\"}[1m]))", "legendFormat": "connexions WS" }
+          ]
+        },
+        {
+          "id": 10,
+          "type": "timeseries",
+          "title": "Réplicas HPA",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+          "fieldConfig": { "defaults": { "unit": "none", "min": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"quizup-prod\"}", "legendFormat": "{{horizontalpodautoscaler}}" }
+          ]
         }
       ]
     }

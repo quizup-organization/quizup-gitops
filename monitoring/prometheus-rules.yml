@@ -235,49 +235,19 @@ spec:
 
     - name: quizup.monitoring
       rules:
-        # Les PVC monitoring (Prometheus/Loki/Tempo/Grafana/Alertmanager, local-path) portent la
-        # rétention 7j : s'ils saturent, les stores tronquent plus tôt ou le pod crashe.
-        - alert: KubePersistentVolumeFillingUp
-          expr: |
-            (
-              kubelet_volume_stats_used_bytes{namespace="monitoring"}
-              /
-              kubelet_volume_stats_capacity_bytes{namespace="monitoring"}
-            ) > 0.85
-            and
-            (
-              kubelet_volume_stats_used_bytes{namespace="monitoring"}
-              /
-              kubelet_volume_stats_capacity_bytes{namespace="monitoring"}
-            ) < 0.99
-          for: 15m
-          labels:
-            severity: warning
-          annotations:
-            summary: "PVC monitoring presque plein : {{ $labels.persistentvolumeclaim }}"
-            description: "{{ $value | humanizePercentage }} utilisé depuis 15 min (namespace {{ $labels.namespace }})."
-        - alert: KubePersistentVolumeFull
-          expr: |
-            (
-              kubelet_volume_stats_used_bytes{namespace="monitoring"}
-              /
-              kubelet_volume_stats_capacity_bytes{namespace="monitoring"}
-            ) > 0.99
-          for: 10m
-          labels:
-            severity: critical
-          annotations:
-            summary: "PVC monitoring saturé : {{ $labels.persistentvolumeclaim }}"
-            description: "Volume plein (> 99%) : risque de crash du store (Prometheus TSDB / ingester Loki)."
-        - alert: KubePersistentVolumeFullInFourDays
+        # Les PVC `local-path` sont des hostPath : kubelet_volume_stats_* remonte les stats du
+        # disque racine du Pi (partagé par tous les PVC), pas celles du PVC. Les alertes PVC
+        # sont donc trompeuses (faux positifs sur le disque hôte). On alerte sur le disque
+        # hôte réel — la purge quotidienne des images (quizup-image-prune) limite sa croissance.
+        - alert: NodeRootFilesystemFullInFourDays
           expr: |
             predict_linear(
-              kubelet_volume_stats_available_bytes{namespace="monitoring"}[6h],
+              node_filesystem_avail_bytes{mountpoint="/"}[6h],
               4 * 24 * 3600
             ) < 0
           for: 1h
           labels:
             severity: warning
           annotations:
-            summary: "PVC monitoring saturé sous 4 jours : {{ $labels.persistentvolumeclaim }}"
-            description: "Projection linéaire (6h) → volume plein sous 4 jours (namespace {{ $labels.namespace }})."
+            summary: "Disque racine saturé sous 4 jours : {{ $labels.instance }}"
+            description: "Projection linéaire (6h) → disque {{ $labels.mountpoint }} plein sous 4 jours (images containerd / PVC local-path / logs)."

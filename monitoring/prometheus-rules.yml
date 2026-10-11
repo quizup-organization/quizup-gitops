@@ -169,6 +169,18 @@ spec:
             summary: "Échecs répétés d'événements Axon : {{ $labels.application }}"
             description: "Des événements échouent en boucle sur {{ $labels.processor }} (vérifier logs + token)."
 
+    - name: quizup.business
+      rules:
+        - alert: QuizupNewUserRegistered
+          expr: |
+            increase(quizup_axon_events_published_total{
+              application="quizup-identity", name="UserRegisteredEvent"}[5m]) > 0
+          labels:
+            severity: info
+          annotations:
+            summary: "Nouvel utilisateur inscrit sur QuizUp"
+            description: "{{ $value }} inscription(s) détectée(s) sur les 5 dernières minutes."
+
     - name: quizup.platform
       rules:
         - alert: PostgresDown

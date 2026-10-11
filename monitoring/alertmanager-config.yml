@@ -17,6 +17,12 @@ spec:
     groupWait: 30s
     groupInterval: 5m
     repeatInterval: 4h
+    routes:
+      - receiver: telegram-info
+        matchers:
+          - name: severity
+            value: info
+            matchType: "="
   receivers:
     - name: telegram
       telegramConfigs:
@@ -30,6 +36,19 @@ spec:
             {{ range .Alerts -}}
             [{{ .Status | toUpper }}] *{{ .Labels.alertname }}*
             {{ .Annotations.summary }}
+            {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+            {{ end }}
+    - name: telegram-info
+      telegramConfigs:
+        - botToken:
+            name: telegram-alertmanager
+            key: bot-token
+          chatID: -5401485917
+          parseMode: Markdown
+          sendResolved: false
+          message: |-
+            {{ range .Alerts -}}
+            *{{ .Annotations.summary }}*
             {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
             {{ end }}
   # Réduction du bruit : un critical masque le warning de même cause ; un NodeDown masque les

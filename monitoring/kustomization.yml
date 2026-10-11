@@ -15,4 +15,5 @@ resources:
   - dashboards/slo.yml
   - dashboards/axon-activity.yml
   - dashboards/monitoring-stack.yml
+  - dashboards/product-activity.yml
   - grafana-datasources.yml

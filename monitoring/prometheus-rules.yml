@@ -88,6 +88,20 @@ spec:
           annotations:
             summary: "Deployment indisponible : {{ $labels.namespace }}/{{ $labels.deployment }}"
             description: "Répliques disponibles inférieures au souhaité depuis 10 min."
+        # Catche la cause racine (limite cgroup dépassée) en amont de TargetDown/KubePodNotReady.
+        # Le `and` sur l'augmentation des restarts permet à l'alerte de se résoudre dès que le pod
+        # ne redémarre plus (le gauge `last_terminated_reason` reste sinon OOMKilled à vie).
+        - alert: KubeContainerOOMKilled
+          expr: |
+            kube_pod_container_status_last_terminated_reason{reason="OOMKilled", namespace=~"quizup-prod|monitoring"} == 1
+            and on (namespace, pod, container)
+            increase(kube_pod_container_status_restarts_total{namespace=~"quizup-prod|monitoring"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Conteneur tué pour OOM : {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }})"
+            description: "Redémarrage(s) pour dépassement de la limite mémoire dans les 15 dernières minutes."
 
     - name: quizup.apps
       rules:

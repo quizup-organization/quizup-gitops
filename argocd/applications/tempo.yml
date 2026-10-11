@@ -41,11 +41,12 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
+              memory: 512Mi
             limits:
-              # Tempo atteint ~510 Mi au démarrage (ballast 128 Mi + replay WAL + blocs locaux) :
-              # une limite à 512 Mi provoque un OOM-kill en boucle.
-              memory: 1Gi
+              # 1 Gi insuffisant : après un pic de traces (tests de charge), le replay WAL + le
+              # rechargement des blocs locaux au démarrage dépassent 1 Gi → OOM-kill en boucle.
+              # 2 Gi laisse la marge nécessaire (pi-node2 a ~16 Gi).
+              memory: 2Gi
 
         persistence:
           enabled: true

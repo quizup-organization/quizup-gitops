@@ -63,15 +63,17 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8080
-            failureThreshold: 40
+            failureThreshold: 60
             periodSeconds: 5
+          # Sondes tolérantes à la saturation CPU (test charge 1000 parties) : sous charge,
+          # /actuator/health peut répondre en plusieurs secondes — seuils serrés = kills en boucle du kubelet.
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
             initialDelaySeconds: 20
             periodSeconds: 10
-            timeoutSeconds: 2
+            timeoutSeconds: 5
             failureThreshold: 6
           livenessProbe:
             httpGet:
@@ -79,8 +81,8 @@ spec:
               port: 8080
             initialDelaySeconds: 40
             periodSeconds: 10
-            timeoutSeconds: 2
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 6
           ports:
             - containerPort: 8080
 ---

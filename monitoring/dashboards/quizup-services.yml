@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-quizup-services
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/part-of: quizup
+data:
+  quizup-services.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 1,
+      "refresh": "30s",
+      "schemaVersion": 39,
+      "tags": ["quizup", "resources"],
+      "title": "QuizUp — Services (CPU / mémoire / réplicas)",
+      "uid": "quizup-services",
+      "version": 1,
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "browser",
+      "templating": {
+        "list": [
+          {
+            "name": "application",
+            "label": "Service",
+            "type": "custom",
+            "multi": true,
+            "includeAll": true,
+            "current": { "text": "All", "value": "$__all" },
+            "options": [
+              { "text": "quizup-bff", "value": "quizup-bff" },
+              { "text": "quizup-identity", "value": "quizup-identity" },
+              { "text": "quizup-theme", "value": "quizup-theme" },
+              { "text": "quizup-game", "value": "quizup-game" },
+              { "text": "quizup-social", "value": "quizup-social" },
+              { "text": "quizup-matchmaking", "value": "quizup-matchmaking" },
+              { "text": "quizup-profile", "value": "quizup-profile" },
+              { "text": "quizup-leaderboard", "value": "quizup-leaderboard" },
+              { "text": "quizup-notification", "value": "quizup-notification" },
+              { "text": "quizup-web", "value": "quizup-web" }
+            ]
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Service : $application",
+          "repeat": "application",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+        },
+        {
+          "id": 101,
+          "type": "stat",
+          "title": "Instances (prêtes / HPA)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 4, "w": 5, "x": 0, "y": 1 },
+          "fieldConfig": { "defaults": { "unit": "none", "min": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "kube_deployment_status_replicas_ready{namespace=\"quizup-prod\", deployment=\"$application\"}", "legendFormat": "prêtes" },
+            { "refId": "B", "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"quizup-prod\", horizontalpodautoscaler=\"$application\"}", "legendFormat": "HPA" }
+          ]
+        },
+        {
+          "id": 102,
+          "type": "stat",
+          "title": "Redémarrages 1 h",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 4, "w": 5, "x": 0, "y": 5 },
+          "fieldConfig": { "defaults": { "unit": "none", "min": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 3 } ] } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"quizup-prod\", container=\"$application\"}[1h]))" }
+          ]
+        },
+        {
+          "id": 103,
+          "type": "timeseries",
+          "title": "CPU (cores) — usage / request / limit",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 9, "x": 5, "y": 1 },
+          "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"quizup-prod\", container=\"$application\"}[5m]))", "legendFormat": "usage" },
+            { "refId": "B", "expr": "sum(kube_pod_container_resource_requests{namespace=\"quizup-prod\", container=\"$application\", resource=\"cpu\"})", "legendFormat": "request" },
+            { "refId": "C", "expr": "sum(kube_pod_container_resource_limits{namespace=\"quizup-prod\", container=\"$application\", resource=\"cpu\"})", "legendFormat": "limit" }
+          ]
+        },
+        {
+          "id": 104,
+          "type": "timeseries",
+          "title": "Mémoire — usage / limit",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 10, "x": 14, "y": 1 },
+          "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [
+            { "refId": "A", "expr": "sum(container_memory_working_set_bytes{namespace=\"quizup-prod\", container=\"$application\"})", "legendFormat": "usage" },
+            { "refId": "B", "expr": "sum(kube_pod_container_resource_limits{namespace=\"quizup-prod\", container=\"$application\", resource=\"memory\"})", "legendFormat": "limit" }
+          ]
+        }
+      ]
+    }

@@ -71,11 +71,11 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 - `issuer` OIDC public (`identity.…`) mais `jwk-set-uri` **in-cluster** pour éviter le hairpin NAT.
 - **Autoscaling** : `metrics-server` est fourni par k3s (rien à déployer). Les HPA vivent dans
   `apps/<svc>/autoscaling.yml` ; quand un service est piloté par HPA, son Deployment **ne fixe
-  plus `replicas`** (sinon ArgoCD écrase le HPA à chaque sync). `quizup-web` et `quizup-identity`
-  sont scalables (stateless / JWK et sessions partagées) ; le **BFF** nécessite le fan-out
-  « token par instance » (SDK + split des publishers) avant toute montée en répliques — sinon
-  les clients STOMP d'une instance ne reçoivent pas les événements et les Web Push seraient
-  dupliqués.
+  plus `replicas`** (sinon ArgoCD écrase le HPA à chaque sync). `quizup-web`, `quizup-identity` et
+  le **BFF** sont scalables : le BFF utilise les **groupes instance-scopés** du SDK (chaque pod
+  consomme tout le fan-out STOMP) et garde le Web Push sur un groupe global unique. Le scale-down
+  du BFF ferme les sessions STOMP du pod retiré (reconnexion + folds REST), d'où une fenêtre de
+  stabilisation longue (900 s) et un minimum de 2 réplicas.
 
 ---
 

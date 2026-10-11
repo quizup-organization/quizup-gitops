@@ -9,7 +9,9 @@ metadata:
     # Pas de label `app.kubernetes.io/component: axon` : le BFF émet des queries/commands et
     # consomme Kafka, mais n'est pas un fournisseur — inutile de le rendre découvrable.
 spec:
-  replicas: 1
+  # Réplicas pilotés par le HPA (apps/bff/autoscaling.yml) — ne pas fixer `replicas` ici.
+  # Multi-réplique sûr : les groupes de fan-out STOMP sont instance-scopés (consommation
+  # complète par pod, tokens suffixés — cf. SDK) et le Web Push reste sur un groupe global unique.
   selector:
     matchLabels:
       app.kubernetes.io/part-of: quizup
@@ -22,6 +24,14 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-pull
+      # Répartit les réplicas sur les 2 nœuds (soft : un nœud seul reste schedulable).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: quizup-bff
       containers:
         - name: quizup-bff
           image: ghcr.io/quizup-organization/bff:1.1.0
@@ -43,8 +53,9 @@ spec:
                 name: quizup-bff-push
           resources:
             requests:
-              cpu: 100m
-              memory: 384Mi
+              # Base de calcul du HPA : ~1 réplique pour 350+ sessions STOMP actives.
+              cpu: 250m
+              memory: 512Mi
             limits:
               cpu: "1"
               memory: 1Gi

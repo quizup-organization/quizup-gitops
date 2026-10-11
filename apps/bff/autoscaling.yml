@@ -1,0 +1,44 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: quizup-bff
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-bff
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: quizup-bff
+  # Min 2 : un pod peut tomber (rollout nœud) sans couper toutes les sessions STOMP.
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+    scaleDown:
+      # Le scale-down ferme les sessions STOMP du pod retiré (reconnexion + folds REST) :
+      # fenêtre longue pour ne le faire que sous charge durablement basse.
+      stabilizationWindowSeconds: 900
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: quizup-bff
+  namespace: quizup-prod
+  labels:
+    app.kubernetes.io/part-of: quizup
+    app: quizup-bff
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: quizup-bff

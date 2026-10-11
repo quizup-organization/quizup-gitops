@@ -12,22 +12,41 @@ data:
       "annotations": { "list": [] },
       "editable": true,
       "graphTooltip": 1,
-      "refresh": "1m",
+      "refresh": "5m",
       "schemaVersion": 39,
-      "tags": ["quizup"],
+      "tags": ["quizup", "product"],
       "title": "QuizUp — Activité produit",
       "uid": "quizup-product-activity",
       "version": 1,
       "time": { "from": "now-7d", "to": "now" },
       "timezone": "browser",
+      "links": [
+        {
+          "asDropdown": true,
+          "icon": "external link",
+          "includeVars": true,
+          "keepTime": true,
+          "tags": ["quizup"],
+          "targetBlank": false,
+          "title": "Autres dashboards",
+          "type": "dashboards"
+        }
+      ],
       "templating": { "list": [] },
       "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Acquisition",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
+        },
         {
           "id": 1,
           "type": "stat",
           "title": "Inscriptions (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -39,7 +58,7 @@ data:
           "type": "stat",
           "title": "Connexions (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -51,7 +70,7 @@ data:
           "type": "stat",
           "title": "Parties créées (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -63,7 +82,7 @@ data:
           "type": "stat",
           "title": "Parties terminées (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -75,7 +94,7 @@ data:
           "type": "stat",
           "title": "Défis créés (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -87,7 +106,7 @@ data:
           "type": "stat",
           "title": "Défis acceptés (période)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
@@ -95,54 +114,194 @@ data:
           ]
         },
         {
-          "id": 7,
-          "type": "timeseries",
-          "title": "Inscriptions par jour",
+          "id": 101,
+          "type": "row",
+          "title": "Conversion & qualité",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 }
+        },
+        {
+          "id": 21,
+          "type": "stat",
+          "title": "Complétion des parties",
+          "description": "GameEndedEvent / GameCreatedEvent sur la période (rétention Prometheus 7 j max).",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 6, "x": 0, "y": 4 },
-          "interval": "1d",
-          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "decimals": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 0.6 }, { "color": "green", "value": 0.8 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-identity\", name=\"UserRegisteredEvent\"}[$__interval]))", "legendFormat": "inscriptions" }
+            { "refId": "A", "expr": "(sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameEndedEvent\"}[$__range])) / clamp_min(sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameCreatedEvent\"}[$__range])), 1)) and (sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameCreatedEvent\"}[$__range])) > 0)", "instant": true }
           ]
         },
         {
-          "id": 8,
-          "type": "timeseries",
-          "title": "Connexions par jour",
+          "id": 22,
+          "type": "stat",
+          "title": "Acceptation des défis",
+          "description": "ChallengeAcceptedEvent / ChallengeCreatedEvent sur la période.",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 6, "x": 6, "y": 4 },
-          "interval": "1d",
-          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "decimals": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 0.3 }, { "color": "green", "value": 0.5 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-identity\", name=\"UserLoggedInEvent\"}[$__interval]))", "legendFormat": "connexions" }
+            { "refId": "A", "expr": "(sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeAcceptedEvent\"}[$__range])) / clamp_min(sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeCreatedEvent\"}[$__range])), 1)) and (sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeCreatedEvent\"}[$__range])) > 0)", "instant": true }
           ]
         },
         {
-          "id": 9,
-          "type": "timeseries",
-          "title": "Parties créées / terminées par jour",
+          "id": 23,
+          "type": "stat",
+          "title": "Succès appariement",
+          "description": "MatchmakingMatchedEvent / MatchmakingStartedEvent sur la période.",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 6, "x": 12, "y": 4 },
-          "interval": "1d",
-          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "decimals": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 0.4 }, { "color": "green", "value": 0.7 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameCreatedEvent\"}[$__interval]))", "legendFormat": "créées" },
-            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameEndedEvent\"}[$__interval]))", "legendFormat": "terminées" }
+            { "refId": "A", "expr": "(sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"MatchmakingMatchedEvent\"}[$__range])) / clamp_min(sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"MatchmakingStartedEvent\"}[$__range])), 1)) and (sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"MatchmakingStartedEvent\"}[$__range])) > 0)", "instant": true }
           ]
         },
         {
-          "id": 10,
-          "type": "timeseries",
-          "title": "Défis créés / acceptés par jour",
+          "id": 24,
+          "type": "stat",
+          "title": "Salles abouties",
+          "description": "RoomCompletedEvent / RoomCreatedEvent sur la période.",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 6, "x": 18, "y": 4 },
-          "interval": "1d",
-          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "decimals": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": null }, { "color": "orange", "value": 0.6 }, { "color": "green", "value": 0.8 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeCreatedEvent\"}[$__interval]))", "legendFormat": "créés" },
-            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeAcceptedEvent\"}[$__interval]))", "legendFormat": "acceptés" }
+            { "refId": "A", "expr": "(sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"RoomCompletedEvent\"}[$__range])) / clamp_min(sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"RoomCreatedEvent\"}[$__range])), 1)) and (sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"RoomCreatedEvent\"}[$__range])) > 0)", "instant": true }
           ]
+        },
+        {
+          "id": 25,
+          "type": "stat",
+          "title": "Abandons (période)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameForfeitedEvent\"}[$__range]))", "instant": true }
+          ]
+        },
+        {
+          "id": 26,
+          "type": "stat",
+          "title": "Annulations de parties (période)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 6 },
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameCancelledEvent\"}[$__range]))", "instant": true }
+          ]
+        },
+        {
+          "id": 102,
+          "type": "row",
+          "title": "Activité par 24 h glissantes",
+          "collapsed": false,
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 10 }
+        },
+        {
+          "id": 31,
+          "type": "barchart",
+          "title": "Identité (24 h glissantes)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 11 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 80, "lineWidth": 1 } }, "overrides": [] },
+          "options": { "orientation": "vertical", "showValue": "never", "stacking": "none", "groupWidth": 0.7, "barWidth": 0.85, "barRadius": 0.05, "tooltip": { "mode": "multi", "sort": "none" } },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-identity\", name=\"UserRegisteredEvent\"}[1d]))", "legendFormat": "inscriptions" },
+            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-identity\", name=\"UserLoggedInEvent\"}[1d]))", "legendFormat": "connexions" }
+          ]
+        },
+        {
+          "id": 32,
+          "type": "barchart",
+          "title": "Jeu (24 h glissantes)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 11 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 80, "lineWidth": 1 } }, "overrides": [] },
+          "options": { "orientation": "vertical", "showValue": "never", "stacking": "none", "groupWidth": 0.7, "barWidth": 0.85, "barRadius": 0.05, "tooltip": { "mode": "multi", "sort": "none" } },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameCreatedEvent\"}[1d]))", "legendFormat": "créées" },
+            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"GameEndedEvent\"}[1d]))", "legendFormat": "terminées" },
+            { "refId": "C", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-game\", name=\"QuestionAnsweredEvent\"}[1d]))", "legendFormat": "réponses" }
+          ]
+        },
+        {
+          "id": 33,
+          "type": "barchart",
+          "title": "Défis (24 h glissantes)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 11 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 80, "lineWidth": 1 } }, "overrides": [] },
+          "options": { "orientation": "vertical", "showValue": "never", "stacking": "none", "groupWidth": 0.7, "barWidth": 0.85, "barRadius": 0.05, "tooltip": { "mode": "multi", "sort": "none" } },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeCreatedEvent\"}[1d]))", "legendFormat": "créés" },
+            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeAcceptedEvent\"}[1d]))", "legendFormat": "acceptés" },
+            { "refId": "C", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeDeclinedEvent\"}[1d]))", "legendFormat": "déclinés" },
+            { "refId": "D", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"ChallengeExpiredEvent\"}[1d]))", "legendFormat": "expirés" }
+          ]
+        },
+        {
+          "id": 34,
+          "type": "barchart",
+          "title": "Appariement & salles (24 h glissantes)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 80, "lineWidth": 1 } }, "overrides": [] },
+          "options": { "orientation": "vertical", "showValue": "never", "stacking": "none", "groupWidth": 0.7, "barWidth": 0.85, "barRadius": 0.05, "tooltip": { "mode": "multi", "sort": "none" } },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"MatchmakingStartedEvent\"}[1d]))", "legendFormat": "recherches" },
+            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"MatchmakingMatchedEvent\"}[1d]))", "legendFormat": "matchés" },
+            { "refId": "C", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-matchmaking\", name=\"RoomCompletedEvent\"}[1d]))", "legendFormat": "salles abouties" }
+          ]
+        },
+        {
+          "id": 35,
+          "type": "barchart",
+          "title": "Social (24 h glissantes)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 19 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 80, "lineWidth": 1 } }, "overrides": [] },
+          "options": { "orientation": "vertical", "showValue": "never", "stacking": "none", "groupWidth": 0.7, "barWidth": 0.85, "barRadius": 0.05, "tooltip": { "mode": "multi", "sort": "none" } },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-social\", name=\"TopicFollowedEvent\"}[1d]))", "legendFormat": "sujets suivis" },
+            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-social\", name=\"UserFollowedEvent\"}[1d]))", "legendFormat": "joueurs suivis" }
+          ]
+        },
+        {
+          "id": 36,
+          "type": "barchart",
+          "title": "Progression (24 h glissantes)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 19 },
+          "interval": "1d",
+          "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "custom": { "fillOpacity": 80, "lineWidth": 1 } }, "overrides": [] },
+          "options": { "orientation": "vertical", "showValue": "never", "stacking": "none", "groupWidth": 0.7, "barWidth": 0.85, "barRadius": 0.05, "tooltip": { "mode": "multi", "sort": "none" } },
+          "targets": [
+            { "refId": "A", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-profile\", name=\"XpAwardedEvent\"}[1d]))", "legendFormat": "XP attribués" },
+            { "refId": "B", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-profile\", name=\"LevelReachedEvent\"}[1d]))", "legendFormat": "niveaux atteints" },
+            { "refId": "C", "expr": "sum(increase(quizup_axon_events_published_total{application=\"quizup-profile\", name=\"BadgeEarnedEvent\"}[1d]))", "legendFormat": "badges obtenus" }
+          ]
+        },
+        {
+          "id": 50,
+          "type": "text",
+          "title": "Limites",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 3, "w": 24, "x": 0, "y": 27 },
+          "options": {
+            "mode": "markdown",
+            "content": "**Rétention Prometheus 7 j** : les totaux « période » et les fenêtres 24 h sont bornés par les données disponibles.\n\n- Les séries « 24 h glissantes » sont des fenêtres roulantes ancrées sur l'instant de la requête, pas des jours calendaires.\n- Compteurs d'événements Axon (`quizup_axon_events_published_total`, tag `name`) sans identifiant joueur : pas de DAU/MAU."
+          }
         }
       ]
     }

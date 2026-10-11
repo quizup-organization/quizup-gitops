@@ -76,6 +76,11 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
   consomme tout le fan-out STOMP) et garde le Web Push sur un groupe global unique. Le scale-down
   du BFF ferme les sessions STOMP du pod retiré (reconnexion + folds REST), d'où une fenêtre de
   stabilisation longue (900 s) et un minimum de 2 réplicas.
+- **Sondes (liveness/readiness)** : seuils **tolérants à la saturation CPU** (`timeoutSeconds: 5`,
+  `failureThreshold: 6`, startup 60×5 s) sur **tous** les services. Des seuils serrés (`2 s`/`3`)
+  font tuer les pods par le kubelet en rollout **sous charge** (test 1000 parties :
+  `/actuator/health` en timeout pendant la saturation → redémarrages en boucle et fenêtres de
+  service sans handler — `NoHandlerForQueryException`). Ne pas resserrer sans mesure.
 
 ---
 

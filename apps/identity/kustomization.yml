@@ -6,6 +6,7 @@ resources:
   - ingress.yml
   - sealed-secret.yml
   - grafana-sealed-secret.yml
+  - argocd-sealed-secret.yml
   - mail-sealed-secret.yml
 images:
   - name: ghcr.io/quizup-organization/identity

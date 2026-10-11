@@ -109,6 +109,20 @@ seal_identity_grafana() {
     --from-literal=QUIZUP_GRAFANA_CLIENT_SECRET="${GRAFANA_OIDC_CLIENT_SECRET:?GRAFANA_OIDC_CLIENT_SECRET manquant}"
 }
 
+# Secret additionnel d'identity : client OIDC `argocd` (confidentiel).
+# Séparé du secret principal pour ne pas avoir à le resceller en entier.
+seal_identity_argocd() {
+  seal_generic quizup-prod quizup-identity-argocd apps/identity/argocd-sealed-secret.yml \
+    --from-literal=QUIZUP_ARGOCD_CLIENT_SECRET="${ARGOCD_OIDC_CLIENT_SECRET:?ARGOCD_OIDC_CLIENT_SECRET manquant}"
+}
+
+# Secret OIDC ArgoCD (namespace `argocd`) : lu par le rôle Ansible
+# `argocd_bootstrap` pour renseigner `oidc.clientSecret` dans `argocd-secret`.
+seal_argocd_oidc() {
+  seal_generic argocd quizup-argocd-oidc argocd/config/sealed-secret.yml \
+    --from-literal=client-secret="${ARGOCD_OIDC_CLIENT_SECRET:?ARGOCD_OIDC_CLIENT_SECRET manquant}"
+}
+
 seal_infra() {
   seal_generic quizup-prod quizup-infra-secret infrastructure/sealed-secret.yml \
     --from-literal=POSTGRES_PASSWORD="${INFRA_POSTGRES_PASSWORD:?INFRA_POSTGRES_PASSWORD manquant}"
@@ -154,6 +168,8 @@ case "${1:-all}" in
   identity) seal_identity ;;
   identity-mail) seal_identity_mail ;;
   identity-grafana) seal_identity_grafana ;;
+  identity-argocd) seal_identity_argocd ;;
+  argocd-oidc) seal_argocd_oidc ;;
   gateway) seal_gateway ;;
   infra) seal_infra ;;
   ghcr-pull) seal_ghcr ;;
@@ -161,7 +177,7 @@ case "${1:-all}" in
   theme|game|social|matchmaking|profile|leaderboard|notification|bff) seal_service "$1" ;;
   bff-push) seal_bff_push ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|theme|game|social|matchmaking|profile|leaderboard|notification|bff|bff-push|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|identity-argocd|argocd-oidc|theme|game|social|matchmaking|profile|leaderboard|notification|bff|bff-push|gateway]" >&2
     exit 1
     ;;
 esac

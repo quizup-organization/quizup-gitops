@@ -111,6 +111,11 @@ spec:
           "grafana.ini":
             server:
               root_url: https://grafana.quizup.cnadjim.fr
+            auth:
+              # OIDC QuizUp uniquement : plus de formulaire/basic auth local (strict).
+              disable_login_form: true
+              basic:
+                enabled: false
             "auth.generic_oauth":
               enabled: true
               name: QuizUp
@@ -127,8 +132,9 @@ spec:
               # on autorise Grafana à rattacher le compte par email plutôt que de tenter
               # une création qui échoue (« user not found »).
               oauth_allow_insecure_email_lookup: true
-              role_attribute_path: "contains(roles, 'ROLE_ADMIN') && 'Admin' || 'Viewer'"
-              role_attribute_strict: false
+              # Admins uniquement : sans ROLE_ADMIN, la connexion est refusée (strict).
+              role_attribute_path: "contains(roles, 'ROLE_ADMIN') && 'Admin'"
+              role_attribute_strict: true
           sidecar:
             dashboards:
               enabled: true

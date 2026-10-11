@@ -40,6 +40,8 @@ spec:
             - secretRef:
                 name: quizup-identity-grafana
             - secretRef:
+                name: quizup-identity-argocd
+            - secretRef:
                 name: quizup-identity-mail
           resources:
             requests:

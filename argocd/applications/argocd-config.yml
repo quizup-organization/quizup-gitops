@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-config
+  namespace: argocd
+  annotations:
+    # Avant le bootstrap des applications (wave 0) : fournit le secret OIDC lu par
+    # le rôle Ansible `argocd_bootstrap` pour renseigner `oidc.clientSecret`.
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/quizup-organization/quizup-gitops.git
+    targetRevision: main
+    path: argocd/config
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

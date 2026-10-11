@@ -30,9 +30,10 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 - TLS : `cert-manager.io/cluster-issuer: letsencrypt-prod` (**HTTP-01** via Traefik).
 - Secrets : **jamais en clair** → `scripts/seal-secrets.sh` (kubeseal).
 - Toutes les apps sont dans le namespace `quizup-prod` ; addons dans `cert-manager` / `sealed-secrets`.
-- **Observabilité** : namespace `monitoring`. Grafana sur `grafana.quizup.cnadjim.fr` (TLS
-  `letsencrypt-prod`, OIDC identity + admin break-glass). Prometheus/Alertmanager/Grafana/Loki ont
-  des PVC `local-path`.
+- **Observabilité / ArgoCD** : namespace `monitoring`. Grafana sur `grafana.quizup.cnadjim.fr` et
+  ArgoCD sur `argocd.quizup.cnadjim.fr` (TLS `letsencrypt-prod`) — tous deux **OIDC-only via
+  quizup-identity, admins uniquement**, accès locaux coupés (recovery documentée). Prometheus/
+  Alertmanager/Grafana/Loki ont des PVC `local-path`.
 - Déploiement des images : **ArgoCD Image Updater** (git write-back du `newTag`), via le CR
   `argocd/image-updater/` et les annotations `argocd-image-updater.argoproj.io/*` sur les
   Applications. Plus de `repository_dispatch` / `update-image.yml`.
@@ -151,12 +152,18 @@ Stack auto-hébergée dans le namespace **`monitoring`**, déployée par ArgoCD 
 (`jobLabel: app`). Les tags `application`/`environment`/`version` viennent du SDK
 (`ObservabilityAutoConfiguration`).
 
-**Grafana** : `https://grafana.quizup.cnadjim.fr` — OIDC via `quizup-identity` (client `grafana`
-**confidentiel** : `client_secret_basic` + PKCE ; `auth_url` public, `token_url`/`api_url`
-**in-cluster**), rôle Admin si claim `roles` contient `ROLE_ADMIN`, sinon Viewer. Admin local
-(break-glass) via le secret `grafana-admin`.
-Le client secret OIDC est porté par le SealedSecret `quizup-identity-grafana` (namespace
-`quizup-prod`), injecté dans le Deployment identity via `envFrom`.
+**Grafana** : `https://grafana.quizup.cnadjim.fr` — **OIDC uniquement** via `quizup-identity`
+(client `grafana` **confidentiel** : `client_secret_basic` + PKCE ; `auth_url` public,
+`token_url`/`api_url` **in-cluster**), **admins uniquement** (`role_attribute_strict: true`, login
+local/formulaire/basic désactivés). Le client secret OIDC est porté par le SealedSecret
+`quizup-identity-grafana` (namespace `quizup-prod`), injecté dans le Deployment identity via `envFrom`.
+Recovery : `observability.md` § 4.5.
+
+**ArgoCD** : `https://argocd.quizup.cnadjim.fr` — **OIDC uniquement** via `quizup-identity`
+(client `argocd` confidentiel, PKCE), **admins uniquement** (`argocd-rbac-cm` : `scopes: "[email]"`,
+`g, <email>, role:admin`, `policy.default: ""`), admin local désactivé. La configuration est posée
+par le rôle `argocd_bootstrap` (`argocd-cm` / `argocd-rbac-cm` / `argocd-secret`) ; le secret OIDC est
+scellé dans `argocd/config/sealed-secret.yml` (Application `argocd-config`, wave -1).
 
 **Logs / traces** : les services émettent des **logs structurés JSON ECS** (SDK) collectés par
 **Alloy** (DaemonSet) → **Loki** ; les **traces** (Micrometer/Otel + Axon) partent en OTLP vers

@@ -23,11 +23,30 @@ data:
       "templating": { "list": [] },
       "panels": [
         {
+          "id": 7,
+          "type": "stat",
+          "title": "CPU utilisé (actuel)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "decimals": 1, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 85 } ] } }, "overrides": [] },
+          "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "textMode": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+          "targets": [ { "refId": "A", "expr": "(1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) * 100", "legendFormat": "{{instance}}" } ]
+        },
+        {
+          "id": 8,
+          "type": "timeseries",
+          "title": "Utilisation CPU (%)",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
+          "targets": [ { "refId": "A", "expr": "(1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))) * 100", "legendFormat": "{{instance}}" } ]
+        },
+        {
           "id": 1,
           "type": "timeseries",
           "title": "Température CPU",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
           "fieldConfig": { "defaults": { "unit": "celsius", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [ { "refId": "A", "expr": "pi_cpu_temperature_celsius", "legendFormat": "{{instance}}" } ]
         },
@@ -36,7 +55,7 @@ data:
           "type": "timeseries",
           "title": "Load average (1m)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
           "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [ { "refId": "A", "expr": "node_load1", "legendFormat": "{{instance}}" } ]
         },
@@ -45,7 +64,7 @@ data:
           "type": "timeseries",
           "title": "Mémoire utilisée",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
           "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             { "refId": "A", "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100", "legendFormat": "{{instance}}" }
@@ -56,7 +75,7 @@ data:
           "type": "timeseries",
           "title": "Disque utilisé",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
           "fieldConfig": { "defaults": { "unit": "percent", "max": 100, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             { "refId": "A", "expr": "(1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|squashfs|vfat\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|squashfs|vfat\"}) * 100", "legendFormat": "{{instance}} {{mountpoint}}" }
@@ -67,7 +86,7 @@ data:
           "type": "timeseries",
           "title": "Réseau reçu / émis",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
           "fieldConfig": { "defaults": { "unit": "Bps", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             { "refId": "A", "expr": "rate(node_network_receive_bytes_total{device!=\"lo\"}[5m])", "legendFormat": "rx {{instance}} {{device}}" },
@@ -79,7 +98,7 @@ data:
           "type": "timeseries",
           "title": "Tension / throttling (Pi)",
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
           "fieldConfig": { "defaults": { "unit": "none", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
             { "refId": "A", "expr": "pi_throttled_under_voltage", "legendFormat": "unders-voltage {{instance}}" },

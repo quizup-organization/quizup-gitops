@@ -100,7 +100,7 @@ data:
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=\"WARN\" [$__range]))", "instant": true }
+            { "refId": "A", "expr": "sum(count_over_time({namespace=\"quizup-prod\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=\"WARN\" [$__range]))", "instant": true }
           ]
         },
         {
@@ -112,7 +112,7 @@ data:
           "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__range]))", "instant": true }
+            { "refId": "A", "expr": "sum(count_over_time({namespace=\"quizup-prod\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__range]))", "instant": true }
           ]
         },
         {
@@ -124,7 +124,7 @@ data:
           "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "decimals": 2, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.01 }, { "color": "red", "value": 0.05 } ] } }, "overrides": [] },
           "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value" },
           "targets": [
-            { "refId": "A", "expr": "sum(count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__range])) / clamp_min(sum(count_over_time({namespace=\"quizup-prod\"} | json | __error__=\"\" [$__range])), 1)", "instant": true }
+            { "refId": "A", "expr": "sum(count_over_time({namespace=\"quizup-prod\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__range])) / sum(count_over_time({namespace=\"quizup-prod\"} |= \"@timestamp\" | json | __error__=\"\" [$__range]))", "instant": true }
           ]
         },
         {
@@ -154,7 +154,7 @@ data:
           "gridPos": { "h": 8, "w": 8, "x": 8, "y": 6 },
           "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "sum by (log_level) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" | log_level=~\"$level\" [$__interval]))", "legendFormat": "{{log_level}}" }
+            { "refId": "A", "expr": "sum by (log_level) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"$level\" [$__interval]))", "legendFormat": "{{log_level}}" }
           ]
         },
         {
@@ -165,7 +165,7 @@ data:
           "gridPos": { "h": 8, "w": 8, "x": 16, "y": 6 },
           "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__interval]))", "legendFormat": "{{app}}" }
+            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__interval]))", "legendFormat": "{{app}}" }
           ]
         },
         {
@@ -176,7 +176,7 @@ data:
           "gridPos": { "h": 8, "w": 8, "x": 0, "y": 14 },
           "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "fillOpacity": 10, "lineWidth": 1 } }, "overrides": [] },
           "targets": [
-            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__interval])) / clamp_min(sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" [$__interval])), 0.0001)", "legendFormat": "{{app}}" }
+            { "refId": "A", "expr": "sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__interval])) / sum by (app) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} |= \"@timestamp\" | json | __error__=\"\" [$__interval]))", "legendFormat": "{{app}}" }
           ]
         },
         {
@@ -188,7 +188,7 @@ data:
           "fieldConfig": { "defaults": { "custom": { "align": "auto" }, "unit": "short" }, "overrides": [ { "matcher": { "id": "byName", "options": "log_logger" }, "properties": [ { "id": "custom.width", "value": 460 } ] } ] },
           "options": { "showHeader": true, "sortBy": [ { "displayName": "Value", "desc": true } ] },
           "targets": [
-            { "refId": "A", "expr": "topk(10, sum by (log_logger) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__range])))", "instant": true }
+            { "refId": "A", "expr": "topk(10, sum by (log_logger) (count_over_time({namespace=\"quizup-prod\", app=~\"$app\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"ERROR|FATAL\" [$__range])))", "instant": true }
           ]
         },
         {
@@ -220,7 +220,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__=\"\" | log_level=~\"$level\" |= \"$search\" | line_format \"{{ .log_level }} [{{ .app }}] {{ .message }}\"",
+              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} |= \"@timestamp\" | json | __error__=\"\" | log_level=~\"$level\" |= \"$search\" | line_format \"{{ .log_level }} [{{ .app }}] {{ .message }}\"",
               "maxLines": 500
             }
           ]
@@ -236,7 +236,7 @@ data:
           "targets": [
             {
               "refId": "A",
-              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} | json | __error__!=\"\" |= \"$search\"",
+              "expr": "{namespace=\"quizup-prod\", app=~\"$app\"} != \"@timestamp\" |= \"$search\"",
               "maxLines": 500
             }
           ]

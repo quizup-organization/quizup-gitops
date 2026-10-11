@@ -28,6 +28,9 @@ data:
 
   # Tracing distribué : activé par le SDK d'observabilité (désactivé par défaut).
   MICROSERVICE_OBSERVABILITY_TRACING_ENABLED: "true"
+  # Échantillonnage réduit (défaut SDK 0,1) : le fan-out Axon/Kafka côté Pi sature la mémoire du
+  # collecteur, qui refuse alors les spans (503) et fait boucler les WARN « Failed to export spans ».
+  MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "0.01"
 
   # Swagger UI : l'URL d'autorisation OAuth2 doit être PUBLIQUE (le navigateur y accède),
   # alors que QUIZUP_AUTH_SERVER_URL reste in-cluster (JWKS côté serveur).

@@ -69,6 +69,12 @@ spec:
             # Identifiant de cluster KRaft (base64 d'un UUID) — valeur fixe pour un cluster neuf.
             - name: CLUSTER_ID
               value: MkU3OEVBNTcwNTJENDM2Qk
+            # Niveau de log du broker : les state changes KRaft et le cycle de vie des partitions
+            # sont très verbeux en INFO pour un broker mono-nœud. WARN + erreurs uniquement.
+            - name: KAFKA_LOG4J_ROOT_LOGLEVEL
+              value: "WARN"
+            - name: KAFKA_LOG4J_LOGGERS
+              value: "state.change.logger=WARN,kafka=WARN,kafka.controller=WARN,kafka.log=WARN,kafka.server=WARN,kafka.utils=WARN"
           ports:
             - name: broker
               containerPort: 9092

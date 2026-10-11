@@ -68,11 +68,13 @@ spec:
                   replacement   = "/var/log/pods/*$1/*.log"
                   target_label  = "__path__"
                 }
-                // Exclut les namespaces système (bruit, pas de logs applicatifs).
+                // Ne conserve que les namespaces utiles : applications (quizup-prod) et
+                // observabilité (monitoring). Le reste (argocd, cert-manager, sealed-secrets,
+                // namespaces système) est du volume mort pour Loki (PVC 10Gi, rétention 7j).
                 rule {
                   source_labels = ["__meta_kubernetes_namespace"]
-                  regex         = "kube-system|kube-public|kube-node-lease"
-                  action        = "drop"
+                  regex         = "quizup-prod|monitoring"
+                  action        = "keep"
                 }
               }
 

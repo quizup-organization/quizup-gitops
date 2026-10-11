@@ -41,14 +41,28 @@ spec:
           processors:
             memory_limiter:
               check_interval: 5s
-              limit_percentage: 80
-              spike_limit_percentage: 25
-            batch: {}
+              # Aligné sur la limite conteneur (384Mi) : seuil « mou » ~230Mi, sinon le collecteur
+              # refuse les spans (503 « data refused due to high memory usage ») → WARN en boucle.
+              limit_percentage: 75
+              spike_limit_percentage: 15
+            batch:
+              send_batch_size: 1024
+              timeout: 5s
           exporters:
             otlp/tempo:
               endpoint: tempo.monitoring.svc.cluster.local:4317
               tls:
                 insecure: true
+              # File + retry : encaisse les hoquets de Tempo/limiteur sans renvoyer d'erreur aux apps.
+              sending_queue:
+                enabled: true
+                queue_size: 1000
+                num_consumers: 4
+              retry_on_failure:
+                enabled: true
+                initial_interval: 5s
+                max_interval: 30s
+                max_elapsed_time: 120s
           extensions:
             health_check:
               endpoint: 0.0.0.0:13133
@@ -68,9 +82,9 @@ spec:
         resources:
           requests:
             cpu: 50m
-            memory: 96Mi
+            memory: 128Mi
           limits:
-            memory: 256Mi
+            memory: 384Mi
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

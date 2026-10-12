@@ -82,6 +82,20 @@ seal_bff_push() {
     --from-literal=QUIZUP_PUSH_VAPID_PRIVATE_KEY="${QUIZUP_PUSH_VAPID_PRIVATE_KEY:?QUIZUP_PUSH_VAPID_PRIVATE_KEY manquant}"
 }
 
+# Secret racine MinIO (StatefulSet + hook d'init `minio-init`).
+seal_minio() {
+  seal_generic quizup-prod quizup-minio-secret apps/minio/sealed-secret.yml \
+    --from-literal=MINIO_ROOT_USER="${MINIO_ROOT_USER:?MINIO_ROOT_USER manquant}" \
+    --from-literal=MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD manquant}"
+}
+
+# Utilisateur applicatif MinIO du BFF (créé par le hook d'init, injecté dans le Deployment BFF).
+seal_bff_media() {
+  seal_generic quizup-prod quizup-bff-media apps/minio/media-sealed-secret.yml \
+    --from-literal=QUIZUP_MEDIA_ACCESS_KEY="${QUIZUP_MEDIA_ACCESS_KEY:?QUIZUP_MEDIA_ACCESS_KEY manquant}" \
+    --from-literal=QUIZUP_MEDIA_SECRET_KEY="${QUIZUP_MEDIA_SECRET_KEY:?QUIZUP_MEDIA_SECRET_KEY manquant}"
+}
+
 # Secret principal d'identity. Le client OAuth2 Google (login social) est REQUIS :
 # sans `QUIZUP_OAUTH2_GOOGLE_SECRET`, le client-secret reste le placeholder littéral
 # `${QUIZUP_OAUTH2_GOOGLE_SECRET}` et Google refuse l'échange de token.
@@ -161,6 +175,8 @@ seal_all() {
   done
   seal_bff_push
   seal_gateway
+  seal_minio
+  seal_bff_media
 }
 
 case "${1:-all}" in
@@ -176,8 +192,10 @@ case "${1:-all}" in
   monitoring) seal_monitoring ;;
   theme|game|social|matchmaking|profile|leaderboard|notification|console|bff) seal_service "$1" ;;
   bff-push) seal_bff_push ;;
+  minio) seal_minio ;;
+  bff-media) seal_bff_media ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|identity-argocd|argocd-oidc|theme|game|social|matchmaking|profile|leaderboard|notification|console|bff|bff-push|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|identity-argocd|argocd-oidc|theme|game|social|matchmaking|profile|leaderboard|notification|console|bff|bff-push|minio|bff-media|gateway]" >&2
     exit 1
     ;;
 esac

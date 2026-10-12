@@ -22,3 +22,5 @@ spec:
         - https://api.quizup.cnadjim.fr
         - https://identity.quizup.cnadjim.fr
         - https://console.quizup.cnadjim.fr
+        # Stockage d'images (MinIO) : endpoint de liveness public (200 sans authentification).
+        - https://media.quizup.cnadjim.fr/minio/health/live

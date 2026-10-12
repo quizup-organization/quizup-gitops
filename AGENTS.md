@@ -61,6 +61,7 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 | `apps/console`     | `quizup-console`    | `ghcr.io/quizup-organization/console`     | `console.quizup.cnadjim.fr/api/console` (via l'Ingress de la SPA) |
 | `apps/quizup-web`  | `quizup-web`        | `ghcr.io/quizup-organization/quizup-web`  | `app.quizup.cnadjim.fr`      |
 | `apps/quizup-web-console` | `quizup-web-console` | `ghcr.io/quizup-organization/quizup-web-console` | `console.quizup.cnadjim.fr` |
+| `apps/minio`       | `minio` (infra)     | `quay.io/minio/minio` (**épinglé**, arm64) | `media.quizup.cnadjim.fr`    |
 
 > **Console d'exploitation** : `apps/console` (backend, **sans** label `component: axon` — pas de
 > runtime Axon) et `apps/quizup-web-console` (SPA admin) partagent l'hôte
@@ -69,6 +70,16 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 > Avant le premier sync : sceller `quizup-console-secret` (`./scripts/seal-secrets.sh console`) et
 > créer `quizup_console` sur le Postgres **live** (le script d'init ne s'applique qu'aux volumes
 > neufs).
+
+> **Stockage d'images** : `apps/minio` (StatefulSet mono-nœud, PVC 8 Gi `local-path` épinglé
+> `pi-node2`, console désactivée) sert le bucket `quizup-media` sur `media.quizup.cnadjim.fr`
+> (TLS) — **lecture publique `GetObject` uniquement** (pas de listing), écritures réservées à
+> l'utilisateur applicatif du BFF. Deux secrets à sceller avant le premier sync :
+> `MINIO_ROOT_USER=… MINIO_ROOT_PASSWORD=… ./scripts/seal-secrets.sh minio` et
+> `QUIZUP_MEDIA_ACCESS_KEY=… QUIZUP_MEDIA_SECRET_KEY=… ./scripts/seal-secrets.sh bff-media`
+> (le hook PostSync `minio-init` crée bucket/policies/utilisateur, idempotent à chaque sync).
+> Les images du seed sont publiées par `make seed-images ACTION=publish` (workspace) ; la
+> **rétention/backup des objets n'est pas couverte** par les PVC (SPOF assumé).
 
 ---
 
@@ -230,6 +241,10 @@ StatefulSets/PVC `postgres`/`kafka` → resync infra (Postgres vierge + init des
 vide) → attente Postgres/Kafka → resync des services → **remontée des Deployments pilotés par HPA
 à leur `minReplicas`** (un scale à 0 désactive le controller HPA, ArgoCD ne restaure pas
 `replicas` — il n'est pas fixé dans les manifestes) → réactivation de l'auto-sync → vérifications.
+
+> **MinIO n'est pas purgé** par le reset : les objets média (images du seed mirorées, uploads)
+> survivent, ce qui rend le re-seed immédiat ; les uploads orphelins (références `media_asset`
+> effacées) restent à surveiller (nettoyage manuel `mc rm`).
 
 **À lancer avec le rollout du lot** qui change un schéma `V1` (les volumes neufs rejouent les
 migrations) : ex. le lot seed YAML + `topic_entry.image_url` (`theme` ≥ 2.2.0). Le reset doit

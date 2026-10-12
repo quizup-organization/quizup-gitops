@@ -51,6 +51,9 @@ spec:
             # Clé privée VAPID (Web Push) — secret dédié, rescellable indépendamment.
             - secretRef:
                 name: quizup-bff-push
+            # Utilisateur applicatif MinIO (images) — secret défini dans apps/minio.
+            - secretRef:
+                name: quizup-bff-media
           resources:
             requests:
               # Base de calcul du HPA : ~1 réplique pour 350+ sessions STOMP actives.
@@ -118,3 +121,8 @@ data:
   # La paire doit rester stable à vie ; une rotation invalide les abonnements navigateur.
   QUIZUP_PUSH_VAPID_PUBLIC_KEY: BM94efD-XzDsNN1Q7QpDue7uusKvRZ2Loh7gIOCNWAHnD9v-HRgB5BOOIhShy3m-1_E45wiP5Yy7cyV8Nrr2KRc
   QUIZUP_PUSH_VAPID_SUBJECT: mailto:admin@quizup.cnadjim.fr
+  # Stockage d'images (MinIO) : endpoint in-cluster + URL publique (Ingress media.).
+  # Les clés (QUIZUP_MEDIA_ACCESS_KEY/SECRET_KEY) viennent du SealedSecret quizup-bff-media (apps/minio).
+  QUIZUP_MEDIA_S3_ENDPOINT: http://minio
+  QUIZUP_MEDIA_S3_BUCKET: quizup-media
+  QUIZUP_MEDIA_PUBLIC_BASE_URL: https://media.quizup.cnadjim.fr/quizup-media/

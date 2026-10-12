@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: quizup-prod
+resources:
+  - manifests.yml
+  - sealed-secret.yml
+  - media-sealed-secret.yml
+images:
+  - name: quay.io/minio/minio
+    newTag: RELEASE.2025-10-15T17-29-55Z
+  - name: quay.io/minio/mc
+    newTag: RELEASE.2025-08-13T08-35-41Z

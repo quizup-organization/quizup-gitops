@@ -190,6 +190,14 @@ spec:
           annotations:
             summary: "Dead-letter queue non vide : {{ $labels.application }}"
             description: "Des événements en échec attendent dans la DLQ de {{ $labels.processor }} (inspection/rejeu via quizup-console)."
+        - alert: QuizupAxonProcessorNotCaughtUp
+          expr: min by (application, processor) (quizup_axon_console_processor_caught_up{application=~"quizup-.*"}) < 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Processor Axon en retard : {{ $labels.application }}"
+            description: "Le processor {{ $labels.processor }} n'est pas à jour sur tous ses segments depuis 10 min (backlog — vérifier la charge et quizup-console)."
 
     - name: quizup.business
       rules:

@@ -182,6 +182,14 @@ spec:
           annotations:
             summary: "Échecs répétés d'événements Axon : {{ $labels.application }}"
             description: "Des événements échouent en boucle sur {{ $labels.processor }} (vérifier logs + token)."
+        - alert: QuizupAxonConsoleDlqNotEmpty
+          expr: max by (application, processor) (quizup_axon_console_dlq_size{application=~"quizup-.*"}) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Dead-letter queue non vide : {{ $labels.application }}"
+            description: "Des événements en échec attendent dans la DLQ de {{ $labels.processor }} (inspection/rejeu via quizup-console)."
 
     - name: quizup.business
       rules:

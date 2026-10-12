@@ -58,7 +58,18 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 | `apps/profile`     | `quizup-profile`    | `ghcr.io/quizup-organization/profile`     | —                            |
 | `apps/leaderboard` | `quizup-leaderboard`| `ghcr.io/quizup-organization/leaderboard` | —                            |
 | `apps/notification`| `quizup-notification`| `ghcr.io/quizup-organization/notification` | —                          |
+| `apps/console`     | `quizup-console`    | `ghcr.io/quizup-organization/console`     | `console.quizup.cnadjim.fr/api/console` (via l'Ingress de la SPA) |
 | `apps/quizup-web`  | `quizup-web`        | `ghcr.io/quizup-organization/quizup-web`  | `app.quizup.cnadjim.fr`      |
+| `apps/quizup-web-console` | `quizup-web-console` | `ghcr.io/quizup-organization/quizup-web-console` | `console.quizup.cnadjim.fr` |
+
+> **Console d'exploitation** : `apps/console` (backend, **sans** label `component: axon` — pas de
+> runtime Axon) et `apps/quizup-web-console` (SPA admin) partagent l'hôte
+> `console.quizup.cnadjim.fr` : l'Ingress de la SPA route `/api/console` → `quizup-console` et `/`
+> → `quizup-web-console` (`/internal/**` et `/actuator/**` du backend restent in-cluster).
+> Avant le premier sync : sceller `quizup-console-secret` (`./scripts/seal-secrets.sh console`) et
+> créer `quizup_console` sur le Postgres **live** (le script d'init ne s'applique qu'aux volumes
+> neufs).
+| `apps/quizup-web-console` | `quizup-web-console` | `ghcr.io/quizup-organization/quizup-web-console` | `console.quizup.cnadjim.fr` |
 
 ---
 

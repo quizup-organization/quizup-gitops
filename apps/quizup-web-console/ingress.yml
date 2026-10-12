@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quizup-web-console
+  namespace: quizup-prod
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - console.quizup.cnadjim.fr
+      secretName: console-quizup-cnadjim-fr-tls
+  rules:
+    - host: console.quizup.cnadjim.fr
+      http:
+        paths:
+          # API admin de la console (même origine que la SPA : pas de CORS, un seul certificat).
+          # Seul `/api/console` est exposé : `/internal/**` et `/actuator/**` restent in-cluster.
+          - path: /api/console
+            pathType: Prefix
+            backend:
+              service:
+                name: quizup-console
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quizup-web-console
+                port:
+                  number: 80

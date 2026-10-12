@@ -69,7 +69,6 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 > Avant le premier sync : sceller `quizup-console-secret` (`./scripts/seal-secrets.sh console`) et
 > créer `quizup_console` sur le Postgres **live** (le script d'init ne s'applique qu'aux volumes
 > neufs).
-| `apps/quizup-web-console` | `quizup-web-console` | `ghcr.io/quizup-organization/quizup-web-console` | `console.quizup.cnadjim.fr` |
 
 ---
 

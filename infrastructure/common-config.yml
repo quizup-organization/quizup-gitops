@@ -32,6 +32,10 @@ data:
   # collecteur, qui refuse alors les spans (503) et fait boucler les WARN « Failed to export spans ».
   MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "0.01"
 
+  # Console d'exploitation Axon : push des snapshots d'agent (processors/segments + DLQ).
+  # URL par défaut du SDK : http://quizup-console.quizup-prod.svc.cluster.local (Service port 80).
+  QUIZUP_AXON_CONSOLE_ENABLED: "true"
+
   # Swagger UI : l'URL d'autorisation OAuth2 doit être PUBLIQUE (le navigateur y accède),
   # alors que QUIZUP_AUTH_SERVER_URL reste in-cluster (JWKS côté serveur).
   MICROSERVICE_SWAGGER_OAUTH2_AUTHORIZATION_SERVER_URL: https://identity.quizup.cnadjim.fr

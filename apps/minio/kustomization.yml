@@ -6,7 +6,10 @@ resources:
   - sealed-secret.yml
   - media-sealed-secret.yml
 images:
-  - name: quay.io/minio/minio
-    newTag: RELEASE.2025-10-15T17-29-55Z
-  - name: quay.io/minio/mc
-    newTag: RELEASE.2025-08-13T08-35-41Z
+  # MinIO community : les images officielles quay.io sont désormais gated (401 anonyme) et
+  # les binaires dl.min.io retirés — miroir public Bitnami legacy (MinIO 2025.7.23, AGPL,
+  # multi-arch, gelé depuis l'arrêt des builds gratuits Bitnami).
+  - name: docker.io/bitnamilegacy/minio
+    newTag: 2025.7.23-debian-12-r5
+  - name: docker.io/bitnamilegacy/minio-client
+    newTag: 2025.7.21-debian-12-r3

@@ -35,10 +35,24 @@ spec:
       # Données locales (local-path) : épinglé au nœud qui porte le volume (pi-node1 = Postgres+Kafka).
       nodeSelector:
         kubernetes.io/hostname: pi-node2
+      initContainers:
+        # Le volume local-path est créé root:root ; l'image Bitnami tourne en 1001.
+        - name: volume-permissions
+          image: docker.io/bitnamilegacy/minio
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c", "chown -R 1001:1001 /data"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
       containers:
         - name: minio
-          image: quay.io/minio/minio
+          image: docker.io/bitnamilegacy/minio
           imagePullPolicy: IfNotPresent
+          # Binaire MinIO direct (sans les scripts d'entrypoint Bitnami) : mêmes conventions
+          # que l'image officielle (env MINIO_ROOT_*, /minio/health/*, port 9000).
+          command: ["/opt/bitnami/minio/bin/minio"]
           args:
             - server
             - /data
@@ -130,12 +144,14 @@ data:
       ]
     }
   setup.sh: |
-    #!/bin/sh
+    #!/bin/bash
     # Initialisation idempotente : bucket, lecture publique, utilisateur applicatif.
     # Rejoué à chaque sync ArgoCD (hook PostSync, suppression avant recréation).
     set -eu
+    MC="${MC:-mc}"
+    command -v "$MC" >/dev/null 2>&1 || MC=/opt/bitnami/mc/bin/mc
     i=0
-    until mc alias set local "http://minio" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+    until "$MC" alias set local "http://minio" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
       i=$((i + 1))
       if [ "$i" -ge 60 ]; then
         echo "minio indisponible après 5 minutes" >&2
@@ -143,12 +159,12 @@ data:
       fi
       sleep 5
     done
-    mc mb --ignore-existing local/quizup-media
-    mc anonymous set-json /config/public-read.json local/quizup-media
+    "$MC" mb --ignore-existing local/quizup-media
+    "$MC" anonymous set-json /config/public-read.json local/quizup-media
     if [ -n "${QUIZUP_MEDIA_ACCESS_KEY:-}" ]; then
-      mc admin user add local "$QUIZUP_MEDIA_ACCESS_KEY" "$QUIZUP_MEDIA_SECRET_KEY" >/dev/null 2>&1 || true
-      mc admin policy create local quizup-media-rw /config/quizup-media-rw.json >/dev/null 2>&1 || true
-      mc admin policy attach local quizup-media-rw --user "$QUIZUP_MEDIA_ACCESS_KEY" >/dev/null 2>&1 || true
+      "$MC" admin user add local "$QUIZUP_MEDIA_ACCESS_KEY" "$QUIZUP_MEDIA_SECRET_KEY" >/dev/null 2>&1 || true
+      "$MC" admin policy create local quizup-media-rw /config/quizup-media-rw.json >/dev/null 2>&1 || true
+      "$MC" admin policy attach local quizup-media-rw --user "$QUIZUP_MEDIA_ACCESS_KEY" >/dev/null 2>&1 || true
     fi
     echo "bucket quizup-media prêt (lecture publique, écriture BFF)"
 ---
@@ -167,9 +183,9 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: minio-init
-          image: quay.io/minio/mc
+          image: docker.io/bitnamilegacy/minio-client
           imagePullPolicy: IfNotPresent
-          command: ["/bin/sh", "/config/setup.sh"]
+          command: ["/bin/bash", "/config/setup.sh"]
           envFrom:
             - secretRef:
                 name: quizup-minio-secret

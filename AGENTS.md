@@ -74,7 +74,10 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 > **Stockage d'images** : `apps/minio` (StatefulSet mono-nœud, PVC 8 Gi `local-path` épinglé
 > `pi-node2`, console désactivée) sert le bucket `quizup-media` sur `media.quizup.cnadjim.fr`
 > (TLS) — **lecture publique `GetObject` uniquement** (pas de listing), écritures réservées à
-> l'utilisateur applicatif du BFF. Deux secrets à sceller avant le premier sync :
+> l'utilisateur applicatif du BFF. Image : **miroir public Bitnami legacy** (MinIO 2025.7.23,
+> multi-arch) — les images quay.io officielles sont gated (401 anonyme) et dl.min.io ne sert
+> plus les binaires ; remplacer par une image auto-construite si besoin. Deux secrets à sceller
+> avant le premier sync :
 > `MINIO_ROOT_USER=… MINIO_ROOT_PASSWORD=… ./scripts/seal-secrets.sh minio` et
 > `QUIZUP_MEDIA_ACCESS_KEY=… QUIZUP_MEDIA_SECRET_KEY=… ./scripts/seal-secrets.sh bff-media`
 > (le hook PostSync `minio-init` crée bucket/policies/utilisateur, idempotent à chaque sync).

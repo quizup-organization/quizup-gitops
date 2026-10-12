@@ -217,7 +217,9 @@ ssh -p 2222 pi@176.144.234.135 'bash -s -- --yes' < scripts/reset.sh
 
 Déroulé : désactivation de l'auto-sync ArgoCD → arrêt des services → suppression des
 StatefulSets/PVC `postgres`/`kafka` → resync infra (Postgres vierge + init des 8 bases, Kafka
-vide) → attente Postgres/Kafka → resync des services → réactivation de l'auto-sync → vérifications.
+vide) → attente Postgres/Kafka → resync des services → **remontée des Deployments pilotés par HPA
+à leur `minReplicas`** (un scale à 0 désactive le controller HPA, ArgoCD ne restaure pas
+`replicas` — il n'est pas fixé dans les manifestes) → réactivation de l'auto-sync → vérifications.
 
 **À lancer avec le rollout du lot** qui change un schéma `V1` (les volumes neufs rejouent les
 migrations) : ex. le lot seed YAML + `topic_entry.image_url` (`theme` ≥ 2.2.0). Le reset doit

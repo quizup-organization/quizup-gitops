@@ -121,6 +121,20 @@ for app in "${SERVICES[@]}"; do
   wait_synced "${app}" 600 || true
 done
 
+log "6bis/8 Restauration des Deployments pilotés par HPA (scaling désactivé à 0)"
+# `kubectl scale --all --replicas=0` laisse un Deployment HPA à 0 : le controller refuse alors de
+# recalculer (« scaling is disabled since the replica count of the target is zero »). On remonte
+# chaque cible à son minReplicas ; le HPA reprend la main ensuite. Les manifestes ne fixent pas
+# `replicas` pour ces Deployments, ArgoCD ne les écrase donc pas.
+for hpa in $(kubectl -n "${QUIZUP_NS}" get hpa -o name 2>/dev/null); do
+  target="$(kubectl -n "${QUIZUP_NS}" get "${hpa}" -o jsonpath='{.spec.scaleTargetRef.name}' 2>/dev/null)"
+  min="$(kubectl -n "${QUIZUP_NS}" get "${hpa}" -o jsonpath='{.spec.minReplicas}' 2>/dev/null)"
+  if [[ -n "${target}" && -n "${min}" ]]; then
+    kubectl -n "${QUIZUP_NS}" scale "deployment/${target}" --replicas="${min}" >/dev/null
+    echo "  - ${target} -> ${min} (HPA)"
+  fi
+done
+
 log "7/8 Réactivation de l'auto-sync ArgoCD"
 for app in "${APPS[@]}"; do
   autosync_on "${app}" && echo "  - ${app}"

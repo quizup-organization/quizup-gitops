@@ -1,0 +1,3 @@
+kustomize:
+  images:
+  - ghcr.io/quizup-organization/console:1.0.1

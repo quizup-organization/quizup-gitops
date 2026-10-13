@@ -247,7 +247,9 @@ vide) → attente Postgres/Kafka → resync des services → **remontée des Dep
 
 > **MinIO n'est pas purgé** par le reset : les objets média (images du seed mirorées, uploads)
 > survivent, ce qui rend le re-seed immédiat ; les uploads orphelins (références `media_asset`
-> effacées) restent à surveiller (nettoyage manuel `mc rm`).
+> effacées) se surveillent et se purgent depuis la **console Médias** de `quizup-web-console`
+> (`/media`, API admin du BFF — les objets encore référencés sont conservés), ou manuellement
+> avec `mc rm` en dernier recours.
 
 **À lancer avec le rollout du lot** qui change un schéma `V1` (les volumes neufs rejouent les
 migrations) : ex. le lot seed YAML + `topic_entry.image_url` (`theme` ≥ 2.2.0). Le reset doit

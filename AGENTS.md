@@ -67,9 +67,10 @@ Les machines (OS + k3s + bootstrap ArgoCD) sont provisionnées par **`quizup-inf
 > runtime Axon) et `apps/quizup-web-console` (SPA admin) partagent l'hôte
 > `console.quizup.cnadjim.fr` : l'Ingress de la SPA route `/api/console` → `quizup-console` et `/`
 > → `quizup-web-console` (`/internal/**` et `/actuator/**` du backend restent in-cluster).
-> Avant le premier sync : sceller `quizup-console-secret` (`./scripts/seal-secrets.sh console`) et
-> créer `quizup_console` sur le Postgres **live** (le script d'init ne s'applique qu'aux volumes
-> neufs).
+> Avant le premier sync : sceller `quizup-console-secret` (`./scripts/seal-secrets.sh console`).
+> La base `quizup_console` est créée par `infrastructure/postgres-init.yml` (comme les 9 autres) :
+> sur un cluster **déjà** initialisé (volume Postgres existant), la créer à la main
+> (`CREATE DATABASE quizup_console OWNER quizup ENCODING 'UTF8';`) — un reset la recrée.
 
 > **Stockage d'images** : `apps/minio` (StatefulSet mono-nœud, PVC 8 Gi `local-path` épinglé
 > `pi-node2`, console désactivée) sert le bucket `quizup-media` sur `media.quizup.cnadjim.fr`

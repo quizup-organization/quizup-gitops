@@ -230,6 +230,7 @@ sans CLI `argocd`) :
 cd devops/quizup-gitops
 ./scripts/reset.sh            # demande confirmation
 ./scripts/reset.sh --yes      # non interactif (release)
+./scripts/reset.sh --yes --media   # + purge des médias (MinIO) et republication du seed
 ```
 
 **Exécution prod** : le kubeconfig k3s est sur `pi-node1` (SSH `pi@176.144.234.135 -p 2222`).
@@ -245,11 +246,20 @@ vide) → attente Postgres/Kafka → resync des services → **remontée des Dep
 à leur `minReplicas`** (un scale à 0 désactive le controller HPA, ArgoCD ne restaure pas
 `replicas` — il n'est pas fixé dans les manifestes) → réactivation de l'auto-sync → vérifications.
 
-> **MinIO n'est pas purgé** par le reset : les objets média (images du seed mirorées, uploads)
-> survivent, ce qui rend le re-seed immédiat ; les uploads orphelins (références `media_asset`
-> effacées) se surveillent et se purgent depuis la **console Médias** de `quizup-web-console`
-> (`/media`, API admin du BFF — les objets encore référencés sont conservés), ou manuellement
-> avec `mc rm` en dernier recours.
+> **MinIO n'est pas purgé** par le reset par défaut : les objets média (images du seed mirorées,
+> uploads) survivent, ce qui rend le re-seed immédiat ; les uploads orphelins (références
+> `media_asset` effacées) se surveillent et se purgent depuis la **console Médias** de
+> `quizup-web-console` (`/media`, API admin du BFF — les objets encore référencés sont conservés),
+> ou manuellement avec `mc rm` en dernier recours.
+>
+> **`--media`** purge le bucket média **et republic la seed** (à lancer avec le lot qui change les
+> visuels). Purge **in-cluster** via un Job `media-purge` qui réutilise le client MinIO du hook
+> `minio-init` (même image, mêmes secrets scellés) : `mc rb --force` puis rejeu de `setup.sh`
+> (bucket + lecture publique + utilisateur d'écriture du BFF, idempotent). La republication est
+> faite depuis le workspace (`scripts/seed-images.py publish`, boto3 + `product/wikipedia/`)
+> contre `https://media.quizup.cnadjim.fr`, avec les identifiants d'écriture lus dans le secret
+> `quizup-bff-media` ; si le script est introuvable (exécution distante `ssh … < reset.sh`), la
+> commande à rejouer est affichée et le reste du reset n'est pas impacté.
 
 **À lancer avec le rollout du lot** qui change un schéma `V1` (les volumes neufs rejouent les
 migrations) : ex. le lot seed YAML + `topic_entry.image_url` (`theme` ≥ 2.2.0). Le reset doit

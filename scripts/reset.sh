@@ -13,6 +13,11 @@
 # Usage :
 #   ./scripts/reset.sh            # demande confirmation
 #   ./scripts/reset.sh --yes      # non interactif (release / CI)
+#   ./scripts/reset.sh --yes --media   # purge en plus le bucket média (MinIO)
+#
+# --media : vide le bucket `quizup-media` (objets + bucket), le recrée (lecture publique,
+# écriture BFF) puis **republie les images du seed** depuis le workspace. À lancer avec le
+# lot qui change les visuels du seed.
 #
 set -euo pipefail
 
@@ -38,9 +43,14 @@ DBS=(
 )
 
 ASSUME_YES="false"
-if [[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]]; then
-  ASSUME_YES="true"
-fi
+MEDIA="false"
+for arg in "$@"; do
+  case "${arg}" in
+    --yes|-y) ASSUME_YES="true" ;;
+    --media)  MEDIA="true" ;;
+    *) echo "option inconnue : ${arg}" >&2; exit 2 ;;
+  esac
+done
 
 log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m!!  %s\033[0m\n' "$*"; }
@@ -49,6 +59,9 @@ command -v kubectl >/dev/null 2>&1 || { echo "kubectl introuvable" >&2; exit 1; 
 
 if [[ "${ASSUME_YES}" != "true" ]]; then
   warn "Ce script EFFACE Postgres + Kafka de ${QUIZUP_NS} (toutes les données)."
+  if [[ "${MEDIA}" == "true" ]]; then
+    warn "Option --media : EFFACE aussi tous les objets média (MinIO) puis republie le seed."
+  fi
   read -r -p "Confirmer ? (tapez 'reset') " answer
   [[ "${answer}" == "reset" ]] || { echo "annulé."; exit 1; }
 fi
@@ -79,9 +92,95 @@ wait_synced() {
   return 1
 }
 
-log "Contexte kubectl : $(kubectl config current-context 2>/dev/null || echo '?')"
+# Bucket média (MinIO) : purge + republication du seed (option --media).
+MEDIA_BUCKET="${MEDIA_BUCKET:-quizup-media}"
 
-log "1/8 Désactivation de l'auto-sync ArgoCD"
+purge_media() {
+  # Réutilise le client MinIO du hook `minio-init` (image déjà tirée, secrets scellés du
+  # cluster) : supprime le bucket puis rejoue l'init idempotent (bucket + lecture publique +
+  # utilisateur d'écriture du BFF).
+  kubectl -n "${QUIZUP_NS}" delete job media-purge --ignore-not-found >/dev/null
+  kubectl -n "${QUIZUP_NS}" apply -f - >/dev/null <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: media-purge
+  namespace: ${QUIZUP_NS}
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: media-purge
+          image: docker.io/bitnamilegacy/minio-client
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -eu
+              MC="\${MC:-mc}"
+              command -v "\$MC" >/dev/null 2>&1 || MC=/opt/bitnami/mc/bin/mc
+              i=0
+              until "\$MC" alias set local http://minio "\$MINIO_ROOT_USER" "\$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+                i=\$((i + 1))
+                if [ "\$i" -ge 60 ]; then echo "minio indisponible" >&2; exit 1; fi
+                sleep 5
+              done
+              "\$MC" rb --force "local/${MEDIA_BUCKET}" || true
+              bash /config/setup.sh
+          envFrom:
+            - secretRef:
+                name: quizup-minio-secret
+            - secretRef:
+                name: quizup-bff-media
+          volumeMounts:
+            - name: config
+              mountPath: /config
+      volumes:
+        - name: config
+          configMap:
+            name: quizup-minio-init
+EOF
+  if ! kubectl -n "${QUIZUP_NS}" wait --for=condition=complete job/media-purge \
+      --timeout=300s >/dev/null 2>&1; then
+    kubectl -n "${QUIZUP_NS}" logs job/media-purge >&2 || true
+    warn "purge média en échec (job media-purge conservé pour inspection)"
+    return 1
+  fi
+  kubectl -n "${QUIZUP_NS}" logs job/media-purge
+  kubectl -n "${QUIZUP_NS}" delete job media-purge >/dev/null
+}
+
+publish_seed_images() {
+  # Le bucket vient d'être vidé : on republie les images mirorées du seed depuis le workspace
+  # (`scripts/seed-images.py publish`, boto3 + fichier de `product/wikipedia/`).
+  local default_script script
+  default_script="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)/scripts/seed-images.py"
+  script="${SEED_IMAGES_SCRIPT:-${default_script}}"
+  if [[ ! -f "${script}" ]]; then
+    warn "images du seed NON republiées (script introuvable : ${script})"
+    echo "  -> depuis le workspace : make seed-images ACTION=publish"
+    return 0
+  fi
+  local access secret
+  access="$(kubectl -n "${QUIZUP_NS}" get secret quizup-bff-media \
+    -o jsonpath='{.data.QUIZUP_MEDIA_ACCESS_KEY}' | base64 -d)"
+  secret="$(kubectl -n "${QUIZUP_NS}" get secret quizup-bff-media \
+    -o jsonpath='{.data.QUIZUP_MEDIA_SECRET_KEY}' | base64 -d)"
+  if ! MINIO_ENDPOINT="${MEDIA_PUBLISH_ENDPOINT:-https://media.quizup.cnadjim.fr}" \
+      MINIO_BUCKET="${MEDIA_BUCKET}" \
+      MINIO_ACCESS_KEY="${access}" MINIO_SECRET_KEY="${secret}" \
+      python3 "${script}" publish; then
+    warn "republication des images du seed en échec"
+    echo "  -> relancer depuis le workspace :"
+    echo "     MINIO_ENDPOINT=https://media.quizup.cnadjim.fr MINIO_BUCKET=${MEDIA_BUCKET} \\"
+    echo "       MINIO_ACCESS_KEY=… MINIO_SECRET_KEY=… make seed-images ACTION=publish"
+    return 1
+  fi
+}
+
+log "Contexte kubectl : $(kubectl config current-context 2>/dev/null || echo '?')"log "1/8 Désactivation de l'auto-sync ArgoCD"
 for app in "${APPS[@]}"; do
   if autosync_off "${app}"; then echo "  - ${app}"; else warn "ignoré (absent) : ${app}"; fi
 done
@@ -95,6 +194,11 @@ kubectl -n "${QUIZUP_NS}" delete statefulset postgres kafka --ignore-not-found
 kubectl -n "${QUIZUP_NS}" delete pvc postgres-data-postgres-0 kafka-data-kafka-0 --ignore-not-found
 kubectl -n "${QUIZUP_NS}" delete pvc -l app=postgres --ignore-not-found
 kubectl -n "${QUIZUP_NS}" delete pvc -l app=kafka --ignore-not-found
+
+if [[ "${MEDIA}" == "true" ]]; then
+  log "3bis/8 Purge du bucket média (MinIO) + recréation (lecture publique, écriture BFF)"
+  purge_media || true
+fi
 
 log "4/8 Recréation de l'infra (Postgres vierge + 8 bases, Kafka vide)"
 argocd_sync quizup-infrastructure
@@ -157,3 +261,8 @@ kubectl -n "${QUIZUP_NS}" exec statefulset/postgres -- \
   "SELECT count(*) FROM topic_entry WHERE status='PUBLISHED';" || true
 
 log "Terminé : infra vierge + données reseedées."
+
+if [[ "${MEDIA}" == "true" ]]; then
+  log "8bis/8 Republication des images du seed (bucket média vidé)"
+  publish_seed_images || true
+fi

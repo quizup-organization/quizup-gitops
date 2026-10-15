@@ -29,17 +29,20 @@ APPS=(
   quizup-root quizup-infrastructure
   quizup-identity quizup-theme quizup-profile quizup-game quizup-social
   quizup-matchmaking quizup-leaderboard quizup-notification quizup-web
+  quizup-console quizup-web-console
 )
 
 # Services à resynchroniser après recréation de l'infra (ordre : dépendances d'abord).
 SERVICES=(
   quizup-identity quizup-theme quizup-profile quizup-game quizup-social
   quizup-matchmaking quizup-leaderboard quizup-notification quizup-web
+  quizup-console quizup-web-console
 )
 
 DBS=(
   quizup_identity quizup_theme quizup_game quizup_social
   quizup_matchmaking quizup_profile quizup_leaderboard quizup_notification
+  quizup_bff quizup_console
 )
 
 ASSUME_YES="false"

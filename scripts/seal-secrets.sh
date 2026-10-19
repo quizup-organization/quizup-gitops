@@ -109,6 +109,13 @@ seal_identity() {
     --from-literal=QUIZUP_OAUTH2_GOOGLE_SECRET="${QUIZUP_OAUTH2_GOOGLE_SECRET:?QUIZUP_OAUTH2_GOOGLE_SECRET manquant}"
 }
 
+# Secret additionnel d'identity : App Secret Facebook (login social web/mobile).
+# Séparé du secret principal pour ne pas avoir à le resceller en entier.
+seal_identity_facebook() {
+  seal_generic quizup-prod quizup-identity-facebook apps/identity/facebook-sealed-secret.yml \
+    --from-literal=QUIZUP_OAUTH2_FACEBOOK_SECRET="${QUIZUP_OAUTH2_FACEBOOK_SECRET:?QUIZUP_OAUTH2_FACEBOOK_SECRET manquant}"
+}
+
 # Secret additionnel d'identity : clé API Resend pour les codes de connexion OTP email.
 # Séparé du secret principal pour ne pas avoir à le resceller en entier.
 seal_identity_mail() {
@@ -170,6 +177,7 @@ seal_all() {
   seal_infra
   seal_ghcr
   seal_identity
+  seal_identity_facebook
   for svc in theme game social matchmaking profile leaderboard notification console bff; do
     seal_service "${svc}"
   done
@@ -182,6 +190,7 @@ seal_all() {
 case "${1:-all}" in
   all) seal_all ;;
   identity) seal_identity ;;
+  identity-facebook) seal_identity_facebook ;;
   identity-mail) seal_identity_mail ;;
   identity-grafana) seal_identity_grafana ;;
   identity-argocd) seal_identity_argocd ;;
@@ -195,7 +204,7 @@ case "${1:-all}" in
   minio) seal_minio ;;
   bff-media) seal_bff_media ;;
   *)
-    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-mail|identity-grafana|identity-argocd|argocd-oidc|theme|game|social|matchmaking|profile|leaderboard|notification|console|bff|bff-push|minio|bff-media|gateway]" >&2
+    echo "usage: $0 [all|infra|ghcr-pull|monitoring|identity|identity-facebook|identity-mail|identity-grafana|identity-argocd|argocd-oidc|theme|game|social|matchmaking|profile|leaderboard|notification|console|bff|bff-push|minio|bff-media|gateway]" >&2
     exit 1
     ;;
 esac

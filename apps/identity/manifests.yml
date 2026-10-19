@@ -52,6 +52,11 @@ spec:
                 name: quizup-identity-argocd
             - secretRef:
                 name: quizup-identity-mail
+            # App Secret Facebook (login social). Optionnel pour ne pas bloquer
+            # un rollout si le secret n'a pas encore été scellé.
+            - secretRef:
+                name: quizup-identity-facebook
+                optional: true
           resources:
             requests:
               cpu: 150m
@@ -131,6 +136,8 @@ data:
   QUIZUP_SEED_DATA_ENABLED: "true"
   # Liste blanche d'emails obtenant ROLE_ADMIN (Grafana).
   QUIZUP_ADMIN_EMAILS: c.nadjim@gmail.com
+  # Facebook Login (App ID public). L'App Secret est porté par quizup-identity-secret.
+  QUIZUP_OAUTH2_FACEBOOK_CLIENT_ID: "2122240041993058"
   # Emails transactionnels (codes de connexion OTP) via Resend.
   # La clé API est portée par le secret quizup-identity-mail.
   QUIZUP_MAIL_FROM: QuizUp <no-reply@quizup.cnadjim.fr>

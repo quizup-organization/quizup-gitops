@@ -6,6 +6,7 @@ resources:
   - autoscaling.yml
   - ingress.yml
   - sealed-secret.yml
+  - facebook-sealed-secret.yml
   - grafana-sealed-secret.yml
   - argocd-sealed-secret.yml
   - mail-sealed-secret.yml

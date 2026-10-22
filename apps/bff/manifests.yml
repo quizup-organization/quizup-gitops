@@ -123,6 +123,8 @@ data:
   QUIZUP_PUSH_VAPID_SUBJECT: mailto:admin@quizup.cnadjim.fr
   # Stockage d'images (MinIO) : endpoint in-cluster + URL publique (Ingress media.).
   # Les clés (QUIZUP_MEDIA_ACCESS_KEY/SECRET_KEY) viennent du SealedSecret quizup-bff-media (apps/minio).
+  # Appels internes identity (OTP de suppression de compte).
+  QUIZUP_IDENTITY_URL: http://quizup-identity
   QUIZUP_MEDIA_S3_ENDPOINT: http://minio
   QUIZUP_MEDIA_S3_BUCKET: quizup-media
   QUIZUP_MEDIA_PUBLIC_BASE_URL: https://media.quizup.cnadjim.fr/quizup-media/

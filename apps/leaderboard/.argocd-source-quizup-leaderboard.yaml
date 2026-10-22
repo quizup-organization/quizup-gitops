@@ -1,3 +1,3 @@
 kustomize:
   images:
-  - ghcr.io/quizup-organization/leaderboard:4.3.1
+  - ghcr.io/quizup-organization/leaderboard:4.4.2

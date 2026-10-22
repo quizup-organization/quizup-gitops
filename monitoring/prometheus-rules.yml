@@ -272,6 +272,17 @@ spec:
             summary: "Certificat TLS bientôt expiré : {{ $labels.instance }}"
             description: "Le certificat expire dans moins de 14 jours."
 
+    - name: quizup.telemetry
+      rules:
+        - alert: QuizupClientErrorSpike
+          expr: sum(increase(quizup_client_errors_total[10m])) > 20
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pic d'erreurs côté navigateur"
+            description: "{{ $value | printf \"%.0f\" }} erreurs client sur 10 min — consulter le dashboard « QuizUp — Activation & erreurs » et Loki."
+
     - name: quizup.monitoring
       rules:
         # Les PVC `local-path` sont des hostPath : kubelet_volume_stats_* remonte les stats du

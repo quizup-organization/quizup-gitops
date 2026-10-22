@@ -16,5 +16,6 @@ resources:
   - dashboards/axon-activity.yml
   - dashboards/monitoring-stack.yml
   - dashboards/product-activity.yml
+  - dashboards/product-telemetry.yml
   - dashboards/quizup-services.yml
   - grafana-datasources.yml

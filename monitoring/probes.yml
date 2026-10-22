@@ -20,7 +20,9 @@ spec:
       static:
         - https://app.quizup.cnadjim.fr
         - https://api.quizup.cnadjim.fr
-        - https://identity.quizup.cnadjim.fr
+        # Identity n'héberge volontairement pas de page /login (SPA) : la racine redirige
+        # vers /login qui répond 403 par conception. On sonde l'endpoint de santé public.
+        - https://identity.quizup.cnadjim.fr/actuator/health
         - https://console.quizup.cnadjim.fr
         # Stockage d'images (MinIO) : endpoint de liveness public (200 sans authentification).
         - https://media.quizup.cnadjim.fr/minio/health/live
